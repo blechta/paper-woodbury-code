@@ -6,6 +6,7 @@
 
 * MATLAB R2020b with Symbolic Math Toolbox,
 * [HSL_MI20 2.0.0](https://www.hsl.rl.ac.uk/packages/hsl_mi20.html),
+* [Gmsh 4.5.6](https://gmsh.info),
 * [matlab2tikz f299888](https://github.com/matlab2tikz/matlab2tikz/tree/f299888fc381a6976009678a7dc00e6fe6872bd2).
 
 
