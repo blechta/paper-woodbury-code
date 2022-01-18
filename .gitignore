@@ -1,0 +1,9 @@
+*.mat
+*.msh
+*.geo
+*.fig
+*.pdf
+*.tex
+*.xdmf
+*.bin
+*.mexa64
