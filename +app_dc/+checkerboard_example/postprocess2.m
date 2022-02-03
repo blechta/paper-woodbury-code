@@ -1,5 +1,7 @@
-plot_performance_characteristics_compare('2d', '2dfw', '2dnw');
-plot_performance_characteristics_compare('3d', '3dfw', '3dnw');
+plot_performance_characteristics_compare('2d', '2ddir', '2ddir');
+plot_performance_characteristics_compare('3d', '3ddir', '3ddir');
+%plot_performance_characteristics_compare('2d', '2dfw', '2dnw');
+%plot_performance_characteristics_compare('3d', '3dfw', '3dnw');
 
 
 function plot_performance_characteristics_compare(output_tag, tag1, tag2)
@@ -58,7 +60,9 @@ end
 
 
 function desc = tag_to_desc(tag)
-    switch tag(3:4)
+    switch tag(3:end)
+    case 'dir'
+        desc = 'Algorithm~\ref{alg:gn-direct}';
     case 'fw'
         desc = 'Algorithm~\ref{alg:gnstep-iterative}';
     case 'nw'

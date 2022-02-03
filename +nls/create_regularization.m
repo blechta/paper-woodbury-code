@@ -1,50 +1,49 @@
-function func = create_regularization(measured_values, dofmap_l2, ...
+function func = create_regularization(measured_values, dofmap, ...
                                       m_ref, solver_type)
     % Prepare function for solving H1-regularized Gauss-Newton systems
     %
     % INPUT PARAMETER
     %   measured_values ... vector [num_observations, 1]
-    %   dofmap_l2       ... struct, representing L^2-conforming parameter space
-    %   m_ref           ... vector [dofmap_l2.dim, 1], reference parameter
-    %   solver_type     ... optional argument, character vector
+    %   dofmap          ... struct, representing L^2-conforming parameter space
+    %   m_ref           ... vector [dofmap.dim, 1], reference parameter
+    %   solver_type     ... character vector; options:
+    %                           'direct'
+    %                           'krylov-full-woodbury'
+    %                           'krylov' (alias for 'krylov-full-woodbury')
+    %                           'krylov-no-woodbury'
     %
     % OUTPUT PARAMETER
     %   func ... function of signature:
     %                [dm, iter, t1, t2, t3] = solve(d, J, m, beta);
     %
-    %       dm     ... vector [dofmap_l2.dim, 1], parameter update
+    %       dm     ... vector [dofmap.dim, 1], parameter update
     %       iter   ... number of solver iterations performed
     %       t1     ... time spent in forming Woodbury correction (only in krylov)
     %       t2     ... time spent in forming capacitance matrix (only in krylov)
     %       t3     ... time spent in Cholesky factorization of correction (only in krylov)
     %       d      ... vector [num_observations, 1], current model response
-    %       J      ... matrix [num_observations, dofmap_l2.dim], current Jacobian
-    %       m      ... vector [dofmap_l2.dim, 1], current parameter value
+    %       J      ... matrix [num_observations, dofmap.dim], current Jacobian
+    %       m      ... vector [dofmap.dim, 1], current parameter value
     %       beta   ... positive scalar, regularization parameter
 
-    if nargin < 4
-        solver_type = 'mixed';
-    end
-
-    [M, D] = assemble_regularization(dofmap_l2);
+    [M, D] = assemble_regularization(dofmap);
     switch solver_type
-    case 'diag'
-        solver_inv = create_solver_direct_diag(M, D);
-    case 'mixed'
-        solver_inv = create_solver_direct_mixed(M, D);
+    case 'direct'
+        func = create_solver_direct(M, D, m_ref, measured_values);
+        return
     case {'krylov', 'krylov-full-woodbury'}
-        solver_inv = create_solver_krylov_woodbury(M, D, 'full-woodbury');
+        assemble_rhs = create_rhs_assembler_krylov(measured_values, D, m_ref);
+        solver = create_solver_krylov_woodbury(M, D, 'full-woodbury');
     case 'krylov-no-woodbury'
-        solver_inv = create_solver_krylov_woodbury(M, D, 'no-woodbury');
+        assemble_rhs = create_rhs_assembler_krylov(measured_values, D, m_ref);
+        solver = create_solver_krylov_woodbury(M, D, 'no-woodbury');
     otherwise
         error('unknown solver type "%s"', solver_type);
     end
 
-    assemble_rhs = create_rhs_assembler(measured_values, D, m_ref);
-
     function [dm, iter, t1, t2, t3] = solve(d, J, m, beta)
         rhs = assemble_rhs(J, d, m, beta);
-        [dm, iter, t1, t2, t3] = solver_inv(J, beta, rhs);
+        [dm, iter, t1, t2, t3] = solver(J, beta, rhs);
     end
 
     func = @solve;
@@ -57,7 +56,8 @@ function [M, D] = assemble_regularization(dofmap_l2)
 
     % Build Hdiv dofmap
     mesh = dofmap_l2.mesh;
-    element_hdiv = fe.create_raviart_thomas_element(mesh.dim, 1);
+    order = dofmap_l2.element.order + 1;
+    element_hdiv = fe.create_raviart_thomas_element(mesh.dim, order);
 
     w = warning('off', 'Mesh:ExtraConnStored');  % Mute warning
     for d = element_hdiv.get_dof_entity_dims()
@@ -101,7 +101,7 @@ function bc_dofs = build_dirichlet_dofs_hdiv0(dofmap)
 end
 
 
-function func = create_rhs_assembler(measured_values, D, m_ref)
+function func = create_rhs_assembler_krylov(measured_values, D, m_ref)
 
     assert(~issparse(measured_values) && iscolumn(measured_values));
     assert(issparse(D) && isreal(D));
@@ -135,60 +135,20 @@ function func = create_rhs_assembler(measured_values, D, m_ref)
 end
 
 
-function func = create_solver_direct_diag(M, D)
+function func = create_solver_direct(M, D, m_ref, measured_values)
     t = tic();
 
     assert(issparse(M) && isreal(M));
     assert(issparse(D) && isreal(D));
-
-    M = diag(diag(M));  % NB: Copied from the old code
-    S = (D/M)*D.';
-    assert(issparse(M));
-    R = chol(S);  % FIXME: reorder for sparsity
-    assert(issparse(R));
-
-    N1 = size(M, 1);
-    N2 = size(D, 1);
-
-    function [dm, iter, t1, t2, t3] = solver(J, beta, rhs)
-        t = tic();
-
-        assert(~issparse(J) && ismatrix(J));
-        assert(isscalar(beta) && isreal(beta) && beta > 0);
-        assert(~issparse(rhs) && iscolumn(rhs) && isreal(rhs));
-
-        J = util.complex2real(J);
-
-        b = D*(M\rhs(1:N1)) + rhs(N1+1:N1+N2);
-        H = R\(R.'\J.') / beta;
-        dm(:) = R\(R.'\b) - H*((speye(size(H, 2)) + J*H)\(H.'*b*beta));
-
-        assert(~issparse(dm) && isreal(dm));
-        iter = 1;
-        [t1, t2, t3] = deal(0);
-
-        fprintf('Solved by diagonal mass matrix: %f seconds\n', toc(t));
-    end
-
-    func = @solver;
-
-    fprintf('Prepared diagonal Cholesky-Woodbury solver: %f\n', toc(t));
-end
-
-
-function func = create_solver_direct_mixed(M, D)
-    t = tic();
-
-    %TODO: Do direct mixed solve using Schur; it is sufficient
-    %      to factor M and invert M three times in Schur...
-
-    assert(issparse(M) && isreal(M));
-    assert(issparse(D) && isreal(D));
+    assert(~issparse(m_ref) && iscolumn(m_ref) && isreal(m_ref));
+    assert(~issparse(measured_values) && iscolumn(measured_values));
 
     N1 = size(M, 1);
     N2 = size(D, 1);
     assert(size(M, 2) == N1);
     assert(size(D, 2) == N1);
+
+    measured_values = util.complex2real(measured_values);
 
     % Assemble mixed regularization matrix
     Z = sparse(N2, N2);
@@ -199,24 +159,40 @@ function func = create_solver_direct_mixed(M, D)
 
     % Compute LDLT factors
     [RL, RD, RP] = ldl(A);
+    RP = RP(N1+1:end, :);
 
-    function [dm, iter, t1, t2, t3] = solver(J, beta, rhs)
+    function [dm, iter, t1, t2, t3] = solver(d, J, m, beta)
         t = tic();
 
+        assert(~issparse(d) && iscolumn(d));
         assert(~issparse(J) && ismatrix(J));
+        assert(~issparse(m) && iscolumn(m) && isreal(m));
         assert(isscalar(beta) && isreal(beta) && beta > 0);
-        assert(~issparse(rhs) && iscolumn(rhs) && isreal(rhs));
 
         J = util.complex2real(J);
+        d = util.complex2real(d);
 
-        Js = 1/sqrt(beta)*J;
-        H = RP(N1+1:end,:)*(RL.'\(RD\(RL\(RP(N1+1:end,:).'*Js.'))));
-        dm = RP(N1+1:end,:)*(RL.'\(RD\(RL\(RP.'*rhs))));
-        dm(:) = dm - H*((speye(size(H, 2)) + Js*H)\(Js*dm));
+        keyboard
 
+        t_ = tic();
+        H = RP*(RL.'\(RD\(RL\(RP.'*J.'))));
+        H = (1/beta) * H;
+        t1 = toc(t_);
+        assert(~issparse(H));
+
+        t_ = tic();
+        C = speye(size(H, 2)) + J*H;
+        t2 = toc(t_);
+        assert(~issparse(C));
+
+        t_ = tic();
+        y = C \ (J*(m - m_ref) - (d - measured_values));
+        t3 = toc(t_);
+        assert(~issparse(y) && iscolumn(y));
+
+        dm = m_ref - m + H*y;
         assert(~issparse(dm) && isreal(dm));
         iter = 1;
-        [t1, t2, t3] = deal(0);
 
         fprintf('Solved by Cholesky-Woodbury: %f seconds\n', toc(t));
     end
@@ -258,7 +234,6 @@ function func = create_solver_krylov_woodbury(M, D, variant)
     end
 
     function [dm, iter, t1, t2, t3] = solver(J, beta, rhs)
-        % FIXME: Move the temporaries to the factory function
 
         t = tic();
 

@@ -9,7 +9,7 @@ function timings = solve(dim, n, ref, ref_synth, tag, inv_solver_type)
     %   ref_synth       ... synthetic mesh refinement level
     %   tag             ... basename for output files
     %   inv_solver_type ... type of regularization solver, e.g.,
-    %                       'diag', 'mixed', 'krylov', or 'krylov-no-woodbury'
+    %                       'direct', 'krylov', or 'krylov-no-woodbury'
     %
     % OUTPUT PARAMETERS
     %   timings   ... struct array with various peformance data,
