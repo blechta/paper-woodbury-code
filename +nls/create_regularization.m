@@ -158,8 +158,7 @@ function func = create_solver_direct(M, D, m_ref, measured_values)
     ];
 
     % Compute LDLT factors
-    [RL, RD, RP] = ldl(A);
-    RP = RP(N1+1:end, :);
+    A = decomposition(A, 'ldl');
 
     function [dm, iter, t1, t2, t3] = solver(d, J, m, beta)
         t = tic();
@@ -172,11 +171,10 @@ function func = create_solver_direct(M, D, m_ref, measured_values)
         J = util.complex2real(J);
         d = util.complex2real(d);
 
-        keyboard
-
         t_ = tic();
-        H = RP*(RL.'\(RD\(RL\(RP.'*J.'))));
-        H = (1/beta) * H;
+        H = [zeros(N1, size(J, 1)); J.'];
+        H = A\H;
+        H = (1/beta) * H(N1+1:end, :);
         t1 = toc(t_);
         assert(~issparse(H));
 
