@@ -1,10 +1,10 @@
 compose_resistivity_figures_2d();
 plot_performance_characteristics('2ddir');
-%plot_performance_characteristics('2dfw');
-%plot_performance_characteristics('2dnw');
+plot_performance_characteristics('2dfw');
+plot_performance_characteristics('2dnw');
 plot_performance_characteristics('3ddir');
-%plot_performance_characteristics('3dfw');
-%plot_performance_characteristics('3dnw');
+plot_performance_characteristics('3dfw');
+plot_performance_characteristics('3dnw');
 
 
 function compose_resistivity_figures_2d()
