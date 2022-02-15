@@ -50,6 +50,7 @@ function func = create_observation(electrode_coords, Mtx, Mrx, ...
         if nargout == 1
             d = assemble_observation_only(U, A);
         else
+            clear('A');
             [d, J] = assemble_observation_and_jacobian(U, sigma);
         end
     end
@@ -173,8 +174,7 @@ function [f1, f2] = create_observation_assembler(dofmap, Mtx, Mrx)
         d = J*sigma;
 
         % Scale by sigma and invert sign
-        diag_sigma = spdiags(sigma, 0, numel(sigma), numel(sigma));
-        J = -J*diag_sigma;
+        J = J .* (-sigma(:).');
 
         assert(~issparse(d));
         assert(~issparse(J));

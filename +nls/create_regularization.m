@@ -179,7 +179,9 @@ function func = create_solver_direct(M, D, m_ref, measured_values)
         assert(~issparse(H));
 
         t_ = tic();
-        C = speye(size(H, 2)) + J*H;
+        C = J*H;
+        n = size(C, 1);
+        C(1:n+1:end) = C(1:n+1:end) + 1;
         t2 = toc(t_);
         assert(~issparse(C));
 
@@ -317,22 +319,30 @@ end
 function [S_corr, t1, t2, t3] = create_woodbury_schur_correction_(J, amg_S, beta)
 
     t_ = tic();
-    H = 1/sqrt(beta)*amg_S.solve(J.');
+    % TODO: Implement solve(J, 'transp') to avoid storing J.'
+    H = amg_S.solve(J.');
+    H = (1/sqrt(beta)) * H;
     t1 = toc(t_);
+    assert(~issparse(H));
 
     t_ = tic();
     % FIXME: 3 nested loops have complexity O(M*N*M)
     %        Blocking can improve this, but probably not to O(M*N)
     %        Can we do something about it?
-    C = speye(size(H, 2)) + 1/sqrt(beta)*J*H;
+    C = J*H;
+    C = (1/sqrt(beta)) * C;
+    n = size(C, 1);
+    C(1:n+1:end) = C(1:n+1:end) + 1;
     t2 = toc(t_);
+    assert(~issparse(C));
 
     t_ = tic();
     R = chol(C);
     t3 = toc(t_);
+    assert(~issparse(R));
 
     % NB: Operator S_corr cannot be assembled! It is dense!
     %     Hence using matrix free action on vector b2.
-    S_corr = @(b2) -H*(R\(R.'\(H.'*b2)));
+    S_corr = @(b2) -(H*(R\(R.'\(H.'*b2))));
 
 end

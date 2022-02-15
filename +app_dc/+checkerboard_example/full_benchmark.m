@@ -16,14 +16,6 @@ timings(7) = app_dc.checkerboard_example.solve(2,  256, 1, 2, '2ddir-ref2-n0256'
 save('checkerboard-timings-2ddir.mat', 'timings');
 
 clear('timings');
-timings(1) = app_dc.checkerboard_example.solve(3, [2, 1], 2, 1, '3ddir-2x1', 'direct');
-timings(2) = app_dc.checkerboard_example.solve(3, [2, 2], 2, 1, '3ddir-2x2', 'direct');
-timings(3) = app_dc.checkerboard_example.solve(3, [2, 3], 2, 1, '3ddir-2x3', 'direct');
-save('checkerboard-timings-3ddir.mat', 'timings');
-
-return
-
-clear('timings');
 timings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, '2dfw-ref2-n0004', 'krylov-full-woodbury');
 timings(2) = app_dc.checkerboard_example.solve(2,    8, 1, 2, '2dfw-ref2-n0008', 'krylov-full-woodbury');
 timings(3) = app_dc.checkerboard_example.solve(2,   16, 1, 2, '2dfw-ref2-n0016', 'krylov-full-woodbury');
@@ -40,6 +32,12 @@ timings(3) = app_dc.checkerboard_example.solve(2,   16, 1, 2, '2dnw-ref2-n0016',
 timings(4) = app_dc.checkerboard_example.solve(2,   32, 1, 2, '2dnw-ref2-n0032', 'krylov-no-woodbury');
 timings(5) = app_dc.checkerboard_example.solve(2,   64, 1, 2, '2dnw-ref2-n0064', 'krylov-no-woodbury');
 save('checkerboard-timings-2dnw.mat', 'timings');
+
+clear('timings');
+timings(1) = app_dc.checkerboard_example.solve(3, [2, 1], 2, 1, '3ddir-2x1', 'direct');
+timings(2) = app_dc.checkerboard_example.solve(3, [2, 2], 2, 1, '3ddir-2x2', 'direct');
+timings(3) = app_dc.checkerboard_example.solve(3, [2, 3], 2, 1, '3ddir-2x3', 'direct');
+save('checkerboard-timings-3ddir.mat', 'timings');
 
 clear('timings');
 timings(1) = app_dc.checkerboard_example.solve(3, [2, 1], 2, 1, '3dfw-2x1', 'krylov-full-woodbury');
