@@ -76,16 +76,19 @@ function [Mtx, Mrx] = create_electrode_configuration_pdp_(width, num_electrodes)
     ia = 0*width;
     im = 1*width;
     in = 2*width;
-    for k = 1:num_configs
-        Mtx(ia+k, k) = +1;  %#ok<SPRIX>
-        Mrx(im+k, k) = +1;  %#ok<SPRIX>
-        Mrx(in+k, k) = -1;  %#ok<SPRIX>
-    end
-    for k = 1:num_configs
-        Mtx(num_electrodes+1-ia-k, num_configs+k) = +1;  %#ok<SPRIX>
-        Mrx(num_electrodes+1-im-k, num_configs+k) = +1;  %#ok<SPRIX>
-        Mrx(num_electrodes+1-in-k, num_configs+k) = -1;  %#ok<SPRIX>
-    end
+    k = 1:num_configs;
+    inda = sub2ind([num_electrodes, 2*num_configs], ia+k, k);
+    indm = sub2ind([num_electrodes, 2*num_configs], im+k, k);
+    indn = sub2ind([num_electrodes, 2*num_configs], in+k, k);
+    Mtx(inda) = +1;
+    Mrx(indm) = +1;
+    Mrx(indn) = -1;
+    inda = sub2ind([num_electrodes, 2*num_configs], num_electrodes+1-ia-k, num_configs+k);
+    indm = sub2ind([num_electrodes, 2*num_configs], num_electrodes+1-im-k, num_configs+k);
+    indn = sub2ind([num_electrodes, 2*num_configs], num_electrodes+1-in-k, num_configs+k);
+    Mtx(inda) = +1;
+    Mrx(indm) = +1;
+    Mrx(indn) = -1;
 end
 
 
