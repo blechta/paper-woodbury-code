@@ -1,10 +1,10 @@
-%plot_performance_characteristics_compare('2d', '2dfw', '2ddir');
-%plot_performance_characteristics_compare('3d', '3dfw', '3ddir');
 plot_performance_characteristics_compare('2d', '2dfw', '2dnw');
 plot_performance_characteristics_compare('3d', '3dfw', '3dnw');
+plot_performance_characteristics_compare('2ddir', '2dfw', '2dnw', '2ddir');
+plot_performance_characteristics_compare('3ddir', '3dfw', '3dnw', '3ddir');
 
 
-function plot_performance_characteristics_compare(output_tag, tag1, tag2)
+function plot_performance_characteristics_compare(output_tag, tag1, tag2, tag3)
 
     matfile1 = load(sprintf('checkerboard-timings-%s.mat', tag1));
     matfile2 = load(sprintf('checkerboard-timings-%s.mat', tag2));
@@ -18,6 +18,14 @@ function plot_performance_characteristics_compare(output_tag, tag1, tag2)
     num_obs1 = vertcat(timings1.num_obs);
     num_obs2 = vertcat(timings2.num_obs);
 
+    if nargin > 3
+        matfile3 = load(sprintf('checkerboard-timings-%s.mat', tag3));
+        timings3 = matfile3.timings;
+        t_normal3 = vertcat(timings3.t_normal);
+        num_dofs_inv3 = vertcat(timings3.num_dofs_inv);
+        num_obs3 = vertcat(timings3.num_obs);
+    end
+
     figure();
     p = loglog(num_obs1.*num_dofs_inv1, t_normal1(:, :), 'x');
     p(1).Marker = 'x';
@@ -30,6 +38,12 @@ function plot_performance_characteristics_compare(output_tag, tag1, tag2)
     p = loglog(num_obs2.*num_dofs_inv2, t_normal2(:, :), 'x');
     p(1).Marker = 'd';
     p(2).Marker = 's';
+
+    if nargin > 3
+        p = loglog(num_obs3.*num_dofs_inv3, t_normal3(:, :), 'x');
+        p(1).Marker = 'v';
+        p(2).Marker = '^';
+    end
 
     [slope_x_, slope_y_] = get_slope(num_obs1.*num_dofs_inv1, t_normal1(:, end), 1);
     loglog(slope_x_, slope_y_, '--');
@@ -48,6 +62,11 @@ function plot_performance_characteristics_compare(output_tag, tag1, tag2)
     end
     for i = 1:size(t_normal2, 2)
         labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc(tag2));  %#ok<AGROW>
+    end
+    if nargin > 3
+        for i = 1:size(t_normal3, 2)
+            labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc(tag3));  %#ok<AGROW>
+        end
     end
     labels{end+1} = 'slope $O(M N)$';
     labels{end+1} = 'slope $O(M^2 N)$';
