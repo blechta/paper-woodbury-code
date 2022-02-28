@@ -81,7 +81,7 @@ function timings = solve(dim, n, ref, ref_synth, tag, inv_solver_type)
     case 2
         fwd_solver_type = 'backslash';
     case 3
-        fwd_solver_type = 'backslash';
+        fwd_solver_type = 'cg/amg';
     end
     assemble_observation = app_dc.create_observation(electrode_coords, Mtx, Mrx, ...
                                                      dofmap, fm, bc_facet_tag, ...
