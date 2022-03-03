@@ -18,9 +18,14 @@
    ```
    app_dc.checkerboard_example.full_benchmark;
    ```
-   This can take around 90 minutes and produces
-   `checkerboard-*.{fig,xdmf,bin,mat}` files in
-   the current directory.
+   This step produces some `checkerboard-*.{fig,xdmf,bin,mat}`
+   files in the current directory.
+
+   This step can take around 90 minutes and needs 7 GB of RAM.
+   To get the full results of the paper, uncomment all lines
+   in `+app_dc/+checkerboard_example/full_benchmark.m`. This
+   can take around 24 hours (depending on machine) and needs
+   around 250 GB of RAM.
 3. Run
    ```
    app_dc.checkerboard_example.postprocess;
