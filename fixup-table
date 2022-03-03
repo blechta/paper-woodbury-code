@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+files = [
+    "checkerboard-timings-flat-2dfw.tex",
+    "checkerboard-timings-flat-2dnw.tex",
+    "checkerboard-timings-flat-3dfw.tex",
+    "checkerboard-timings-flat-3dnw.tex",
+]
+
+
+def reformat_cols(cols):
+    cols = [col.strip() for col in cols]
+    n1, n2, Nele, N, M, i, t1, t2, t3, niter, tnorm = cols
+    t1 = f'{float(t1):.2f}'
+    t2 = f'{float(t2):.4f}'
+    t3 = f'{float(t3):.4f}'
+    tnorm = f'{float(tnorm):.2f}'
+    cols = n1, n2, Nele, N, M, i, t1, t2, t3, niter, tnorm
+    return cols
+
+
+for fn in files:
+    text = open(fn, 'rt').read()
+    lines = text.strip().split(r'\\')
+    for i, line in enumerate(lines):
+        cols = line.strip().split('&')
+        cols = reformat_cols(cols)
+        lines[i] = ' & '.join(cols)
+    text = r'\\'.join(lines)
+    open(fn.rstrip('.tex') + '-new.tex', 'wt').write(text)
