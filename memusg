@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -um
+
+# detect operating system and prepare measurement
+case $(uname) in
+    Darwin|*BSD) sizes() { /bin/ps -o rss= -g $1; } ;;
+    Linux) sizes() { /bin/ps -o rss= $1; } ;;
+    *) echo "$(uname): unsupported operating system" >&2; exit 2 ;;
+esac
+
+pid=$1
+
+# monitor the memory usage in the background.
+#(
+peak=0
+while sizes=$(sizes $pid)
+do
+    set -- $sizes
+    timestamp=$(date +%s)
+    sample=$((${@/#/+}))
+    let peak="sample > peak ? sample : peak"
+    sleep 10
+    echo "pid $pid timestamp $timestamp memusg: $sample" >&2
+done
+echo "pid $pid memusg: peak=$peak" >&2
+#) &
+#monpid=$!
