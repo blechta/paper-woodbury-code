@@ -8,3 +8,6 @@
 *.bin
 *.mexa64
 *.log
+*.svg
+*.html
+__pycache__
