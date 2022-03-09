@@ -37,6 +37,20 @@
    the current directory.
 
 
+## Steps to produce 3d plots ##
+
+The 3d plots are produced by the Python script `plot-3d.py`
+from `.xdmf` and `.bin` files produced by the aforementioned
+steps. The script uses `pyvista` and a `VTK` build with `XDMF3`
+support, which is not featured on PyPI. One can circumvent this
+by using Docker.
+```
+docker build -t pyvista dockerfiles/
+docker run --rm -v "$PWD":/tmp pyvista python3 plot-3d.py
+```
+This produces `checkerboard-3d.svg`.
+
+
 ## Authors ##
 
 * Jan Blechta <jan.blechta@math.tu-chemnitz.de>
