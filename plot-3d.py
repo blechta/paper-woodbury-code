@@ -49,6 +49,7 @@ def add_xdmf_support_to_pyvista():
 
 
 def register_parula_cmap():
+
     from matplotlib.colors import LinearSegmentedColormap
     from matplotlib.cm import register_cmap
 
@@ -365,41 +366,61 @@ def read_file(filename):
     return dataset
 
 
-def main():
-    file_true = "checkerboard-resistivity-true-3dfw-2x{}.xdmf"
-    file_inv = "checkerboard-resistivity-3dfw-2x{}.xdmf"
-    #ns = [2, 3]
-    ns = [2, 3, 4, 5]
-    files_true = [file_true.format(n) for n in ns]
-    files_inv = [file_inv.format(n) for n in ns]
-    datasets = [(n, read_file(f_true), read_file(f_inv)) for
-                n, f_true, f_inv in zip(ns, files_true, files_inv)]
+_datasets = {}
 
+def get_dataset(filename):
+    try:
+        dataset = _datasets[filename]
+    except KeyError:
+        print(f"Opening '{filename}'...")
+        try:
+            dataset = read_file(filename)
+        except Exception:
+            print(f"Opening '{filename}' failed!")
+            dataset = None
+        _datasets[filename] = dataset
+    return dataset
+
+
+def subplot_true(plotter, n):
+    dataset = get_dataset(f"checkerboard-resistivity-true-3dfw-2x{n}.xdmf")
+    if dataset is None:
+        return
+    bricks = dataset.threshold((7000-1, 7000))
+    plotter.add_mesh(bricks, show_scalar_bar=False)
+
+
+def subplot_inv(plotter, n, z):
+    dataset = get_dataset(f"checkerboard-resistivity-3dfw-2x{n}.xdmf")
+    if dataset is None:
+        return
+    s = dataset.slice(normal=(0, 0, 1), origin=(0, 0, z))
+    plotter.add_mesh(s, show_scalar_bar=False)
+    plotter.add_scalar_bar(height=0.45)
+
+
+def main():
     off_screen = not is_interactive()
     num_slices = 5
+    ns = [2, 3, 4, 5]
     p = pv.Plotter(off_screen=off_screen, shape=(1+num_slices, len(ns)))
-    for i, (n, dataset_true, dataset_inv) in enumerate(datasets):
-        bricks = dataset_true.threshold((7000-1, 7000))
+    for i, n in enumerate(ns):
         p.subplot(0, i)
-        p.add_mesh(bricks, show_scalar_bar=False)
+        subplot_true(p, n)
         zmin, zmax = -25/n, -5/n
         zs = np.linspace(zmax, zmin, num_slices)
         for j, z in zip(range(1, num_slices+1), zs):
             p.subplot(j, i)
-            s = dataset_inv.slice(normal=(0, 0, 1), origin=(0, 0, z))
-            p.add_mesh(s, show_scalar_bar=False)
-            p.add_scalar_bar(height=0.45)
+            subplot_inv(p, n, z)
     p.link_views()
     p.camera_position = [
         (131.20247608053455, 131.17699771749744, 111.18619495260486),
         (0.0162811279296875, -0.009197235107421875, -20.0),
         (0.0, 0.0, 1.0),
     ]
-    #p.camera.Zoom(1.5)
     aspect_ratio = 0.66 * (1+num_slices) / len(ns)
-    show_or_export_plot(p, f'checkerboard-3d.svg', aspect=aspect_ratio)
-
-    #import pdb; pdb.set_trace()
+    nx = round(5.125 * 300)
+    show_or_export_plot(p, f'checkerboard-3d.svg', aspect=aspect_ratio, nx=nx)
 
 
 if __name__ == '__main__':
