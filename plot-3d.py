@@ -382,36 +382,69 @@ def get_dataset(filename):
     return dataset
 
 
-def subplot_true(plotter, n):
-    dataset = get_dataset(f"checkerboard-resistivity-true-3dfw-2x{n}.xdmf")
+def plot_true(plotter, tag, n, opacity=None):
+    dataset = get_dataset(f"checkerboard-resistivity-true-3d{tag}-2x{n}.xdmf")
     if dataset is None:
         return
     bricks = dataset.threshold((7000-1, 7000))
-    plotter.add_mesh(bricks, show_scalar_bar=False)
+    plotter.add_mesh(bricks, show_scalar_bar=False,
+                     clim=[3500, 3500], above_color='red',
+                     opacity=opacity)
 
 
-def subplot_inv(plotter, n, z):
-    dataset = get_dataset(f"checkerboard-resistivity-3dfw-2x{n}.xdmf")
+def plot_inv(plotter, tag, n, z):
+    dataset = get_dataset(f"checkerboard-resistivity-3d{tag}-2x{n}.xdmf")
     if dataset is None:
         return
     s = dataset.slice(normal=(0, 0, 1), origin=(0, 0, z))
-    plotter.add_mesh(s, show_scalar_bar=False)
-    plotter.add_scalar_bar(height=0.45)
+    plotter.add_mesh(s, show_scalar_bar=False,
+                     above_color='red',
+                     lighting=False)
 
 
-def main():
-    off_screen = not is_interactive()
+def add_cbar(plotter):
+    plotter.subplot(0, 0)
+    cbar = plotter.add_scalar_bar(above_label='7000', height=1,
+                                  position_x=0.1, width=0.8,
+                                  fmt="%.0f", label_font_size=24,
+                                  title_font_size=12)
+    if cbar is not None:
+        cbar.AnnotationTextScalingOff()
+        cbar.SetAnnotationLeaderPadding(32)
+
+
+def main(tag):
     num_slices = 5
     ns = [2, 3, 4, 5]
-    p = pv.Plotter(off_screen=off_screen, shape=(1+num_slices, len(ns)))
+
+    p = pv.Plotter(off_screen=not is_interactive(),
+                   shape=(2+num_slices, len(ns)),
+                   row_weights=[0.2] + [1] + num_slices*[1],
+                   groups=[(0, np.s_[:])],
+                   border=False)
+
+    # HACK: Make a fake plot in subplot allocated for colorbar
+    p.subplot(0, 0)
+    plot_true(p, tag, ns[0], opacity=0)
+
     for i, n in enumerate(ns):
-        p.subplot(0, i)
-        subplot_true(p, n)
+
+        # Plot true resistivity
+        p.subplot(1, i)
+        plot_true(p, tag, n)
+        add_cbar(p)
+
+        # Choose z=const slices
         zmin, zmax = -25/n, -5/n
         zs = np.linspace(zmax, zmin, num_slices)
-        for j, z in zip(range(1, num_slices+1), zs):
+
+        # Plot slices of inversion results
+        for j, z in zip(range(2, num_slices+2), zs):
             p.subplot(j, i)
-            subplot_inv(p, n, z)
+            plot_inv(p, tag, n, z)
+            #plot_true(p, tag, n, opacity=0.2)
+            add_cbar(p)
+
     p.link_views()
     p.camera_position = [
         (131.20247608053455, 131.17699771749744, 111.18619495260486),
@@ -420,11 +453,17 @@ def main():
     ]
     aspect_ratio = 0.66 * (1+num_slices) / len(ns)
     nx = round(5.125 * 300)
-    show_or_export_plot(p, f'checkerboard-3d.svg', aspect=aspect_ratio, nx=nx)
+    show_or_export_plot(p, f'checkerboard-3d{tag}.svg', aspect=aspect_ratio, nx=nx)
 
 
 if __name__ == '__main__':
     add_xdmf_support_to_pyvista()
     register_parula_cmap()
     pv.global_theme.cmap = 'parula'
-    main()
+    pv.global_theme.transparent_background = True
+    pv.global_theme.background = 'white'
+    pv.global_theme.font.color = 'black'
+    pv.global_theme.font.family = 'times'
+    main('fw')
+    #main('nw')
+    #main('dir')

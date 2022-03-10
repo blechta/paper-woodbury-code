@@ -48,7 +48,7 @@ by using Docker.
 docker build -t pyvista dockerfiles/
 docker run --rm -v "$PWD":/tmp pyvista python3 plot-3d.py
 ```
-This produces `checkerboard-3d.svg`.
+This produces `checkerboard-3dfw.svg`.
 
 
 ## Authors ##
