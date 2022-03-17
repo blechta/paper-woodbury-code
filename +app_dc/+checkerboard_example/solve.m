@@ -93,9 +93,9 @@ function timings = solve(dim, n, ref, ref_synth, tag, inv_solver_type)
     % Iteration parameters
     switch dim
     case 2
-        beta = 1e-3;
+        beta = 1e-1;
     case 3
-        beta = 1e3;
+        beta = 1e5;
     end
     maxit = 2;
 
