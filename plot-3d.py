@@ -382,6 +382,39 @@ def get_dataset(filename):
     return dataset
 
 
+def frame_subplots(plotter, sides='nwse', color='red', width=2.0):
+    points = np.array([[1., 1., 0.],
+                       [0., 1., 0.],
+                       [0., 0., 0.],
+                       [1., 0., 0.]])
+    lines = np.array([[2, 0, 1],
+                      [2, 1, 2],
+                      [2, 2, 3],
+                      [2, 3, 0]])
+    sides = [{'n': 0, 'w': 1, 's': 2, 'e': 3}[side] for side in sides]
+    lines = lines[sides].ravel()
+
+    poly = pv.PolyData()
+    poly.points = points
+    poly.lines = lines
+
+    coordinate = pv._vtk.vtkCoordinate()
+    coordinate.SetCoordinateSystemToNormalizedViewport()
+
+    mapper = pv._vtk.vtkPolyDataMapper2D()
+    mapper.SetInputData(poly)
+    mapper.SetTransformCoordinate(coordinate)
+
+    actor = pv._vtk.vtkActor2D()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetColor(pv.tools.parse_color(color))
+    actor.GetProperty().SetLineWidth(width)
+
+    plotter.renderer.AddViewProp(actor)
+    plotter.renderer.Modified()
+    plotter.renderer._border_actor = actor
+
+
 def plot_true(plotter, tag, n, opacity=None):
     dataset = get_dataset(f"checkerboard-resistivity-true-3d{tag}-2x{n}.xdmf")
     if dataset is None:
@@ -400,6 +433,9 @@ def plot_inv(plotter, tag, n, z):
     plotter.add_mesh(s, show_scalar_bar=False,
                      above_color='red',
                      lighting=False)
+    text = plotter.add_text(f"z = {abs(z):.2f}",
+                            position=(0.05, 0.85),
+                            font_size=12)
 
 
 def add_cbar(plotter):
@@ -414,7 +450,7 @@ def add_cbar(plotter):
 
 
 def main(tag):
-    num_slices = 5
+    num_slices = 8
     ns = [2, 3, 4, 5]
 
     p = pv.Plotter(off_screen=not is_interactive(),
@@ -435,7 +471,7 @@ def main(tag):
         add_cbar(p)
 
         # Choose z=const slices
-        zmin, zmax = -25/n, -5/n
+        zmin, zmax = -70/n, -0/n
         zs = np.linspace(zmax, zmin, num_slices)
 
         # Plot slices of inversion results
@@ -445,12 +481,26 @@ def main(tag):
             #plot_true(p, tag, n, opacity=0.2)
             add_cbar(p)
 
+    # Border hard-coded(!) subplots with red border
+    p.subplot(3, 0); frame_subplots(p, 'wn')
+    p.subplot(3, 1); frame_subplots(p, 'n')
+    p.subplot(3, 2); frame_subplots(p, 'n')
+    p.subplot(3, 3); frame_subplots(p, 'ne')
+    p.subplot(4, 0); frame_subplots(p, 'ws')
+    p.subplot(4, 1); frame_subplots(p, 's')
+    p.subplot(4, 2); frame_subplots(p, 's')
+    p.subplot(4, 3); frame_subplots(p, 'se')
+
     p.link_views()
     p.camera_position = [
         (131.20247608053455, 131.17699771749744, 111.18619495260486),
         (0.0162811279296875, -0.009197235107421875, -20.0),
         (0.0, 0.0, 1.0),
     ]
+
+    p.subplot(2, 0)
+    p.reset_camera_clipping_range()
+
     aspect_ratio = 0.66 * (1+num_slices) / len(ns)
     nx = round(5.125 * 300)
     show_or_export_plot(p, f'checkerboard-3d{tag}.svg', aspect=aspect_ratio, nx=nx)
