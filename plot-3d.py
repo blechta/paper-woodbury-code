@@ -345,12 +345,37 @@ def is_interactive():
         return _is_interactive
 
 
+def fixup_svg(fname_in, fname_out=None):
+    import xml.etree.ElementTree as ET
+    import re
+
+    tree = ET.parse(fname_in)
+    root = tree.getroot()
+    xmlns = re.search('{.*}', root.tag).group(0)
+    for node in root.iter(xmlns+'text'):
+        if node.attrib['dy'] != '0':
+            # Remove dy attributes which LaTeX's svg does
+            # not interpret correctly
+            dy = float(node.attrib['dy'])
+            y = float(node.attrib['y'])
+            node.attrib['dy'] = '0'
+            node.attrib['y'] = f'{y+dy}'
+    if fname_out is None:
+        fname_out = fname_in
+    tree.write(fname_out)
+
+
 def clean_unstructured_grid(dataset):
     from paraview.modules.vtkPVVTKExtensionsFiltersGeneral import vtkCleanUnstructuredGrid
     alg = vtkCleanUnstructuredGrid()
     alg.SetInputData(dataset)
     alg.Update()
     return pv.wrap(alg.GetOutputDataObject(0))
+
+
+def clamp_points_to_surface(dataset, tol=1e-10):
+    z = dataset.points[:, 2]
+    z[abs(z) < tol] = 0
 
 
 def read_file(filename):
@@ -362,6 +387,7 @@ def read_file(filename):
     dataset.set_active_scalars("u")
 
     dataset = clean_unstructured_grid(dataset)
+    clamp_points_to_surface(dataset)
 
     return dataset
 
@@ -379,6 +405,8 @@ def get_dataset(filename):
             print(f"Opening '{filename}' failed!")
             dataset = None
         _datasets[filename] = dataset
+        #print(f"'{filename}': min = {dataset.active_scalars.min()}, "
+        #      f"max = {dataset.active_scalars.max()}")
     return dataset
 
 
@@ -415,14 +443,18 @@ def frame_subplots(plotter, sides='nwse', color='red', width=2.0):
     plotter.renderer._border_actor = actor
 
 
-def plot_true(plotter, tag, n, opacity=None):
+def plot_true(plotter, tag, n, fake=False):
     dataset = get_dataset(f"checkerboard-resistivity-true-3d{tag}-2x{n}.xdmf")
     if dataset is None:
         return
     bricks = dataset.threshold((7000-1, 7000))
     plotter.add_mesh(bricks, show_scalar_bar=False,
                      clim=[3500, 3500], above_color='red',
-                     opacity=opacity)
+                     opacity=0 if fake else None)
+    if fake is True:
+        return
+    slices = dataset.slice_orthogonal(z=0)
+    plotter.add_mesh(slices, opacity=0.25, show_scalar_bar=False)
 
 
 def plot_inv(plotter, tag, n, z):
@@ -434,19 +466,20 @@ def plot_inv(plotter, tag, n, z):
                      above_color='red',
                      lighting=False)
     text = plotter.add_text(f"z = {abs(z):.2f}",
-                            position=(0.05, 0.85),
+                            position=(8, 6),
                             font_size=12)
 
 
 def add_cbar(plotter):
     plotter.subplot(0, 0)
-    cbar = plotter.add_scalar_bar(above_label='7000', height=1,
-                                  position_x=0.1, width=0.8,
+    cbar = plotter.add_scalar_bar(above_label='7000', height=0.5,
+                                  position_x=0.1, position_y=0.5,
+                                  width=0.8,
                                   fmt="%.0f", label_font_size=24,
                                   title_font_size=12)
     if cbar is not None:
         cbar.AnnotationTextScalingOff()
-        cbar.SetAnnotationLeaderPadding(32)
+        cbar.SetAnnotationLeaderPadding(40)
 
 
 def main(tag):
@@ -455,20 +488,19 @@ def main(tag):
 
     p = pv.Plotter(off_screen=not is_interactive(),
                    shape=(2+num_slices, len(ns)),
-                   row_weights=[0.2] + [1] + num_slices*[1],
+                   row_weights=[0.5] + [1] + num_slices*[1],
                    groups=[(0, np.s_[:])],
                    border=False)
 
     # HACK: Make a fake plot in subplot allocated for colorbar
     p.subplot(0, 0)
-    plot_true(p, tag, ns[0], opacity=0)
+    plot_true(p, tag, ns[0], fake=True)
 
     for i, n in enumerate(ns):
 
         # Plot true resistivity
         p.subplot(1, i)
         plot_true(p, tag, n)
-        add_cbar(p)
 
         # Choose z=const slices
         zmin, zmax = -70/n, -0/n
@@ -478,7 +510,6 @@ def main(tag):
         for j, z in zip(range(2, num_slices+2), zs):
             p.subplot(j, i)
             plot_inv(p, tag, n, z)
-            #plot_true(p, tag, n, opacity=0.2)
             add_cbar(p)
 
     # Border hard-coded(!) subplots with red border
@@ -504,6 +535,7 @@ def main(tag):
     aspect_ratio = 0.66 * (1+num_slices) / len(ns)
     nx = round(5.125 * 300)
     show_or_export_plot(p, f'checkerboard-3d{tag}.svg', aspect=aspect_ratio, nx=nx)
+    fixup_svg(f'checkerboard-3d{tag}.svg')
 
 
 if __name__ == '__main__':
