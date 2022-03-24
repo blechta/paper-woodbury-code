@@ -443,6 +443,16 @@ def frame_subplots(plotter, sides='nwse', color='red', width=2.0):
     plotter.renderer._border_actor = actor
 
 
+def electrode_coords(n):
+    X_ = np.linspace(-50, 50, 1+4*n)
+    I = np.ones((1, X_.size))
+    X = np.kron(X_, I)
+    Y = np.kron(I, X_)
+    Z = np.zeros(X.shape)
+    XYZ = np.stack([X, Y, Z], axis=2).squeeze(axis=0)
+    return pv.wrap(XYZ)
+
+
 def plot_true(plotter, tag, n, fake=False):
     dataset = get_dataset(f"checkerboard-resistivity-true-3d{tag}-2x{n}.xdmf")
     if dataset is None:
@@ -455,6 +465,9 @@ def plot_true(plotter, tag, n, fake=False):
         return
     slices = dataset.slice_orthogonal(z=0)
     plotter.add_mesh(slices, opacity=0.25, show_scalar_bar=False)
+    electrodes = electrode_coords(n)
+    ps = {2: 4, 3: 3, 4: 2, 5: 2}[n]
+    plotter.add_mesh(electrodes, color='black', point_size=ps)
 
 
 def plot_inv(plotter, tag, n, z):
@@ -535,7 +548,8 @@ def main(tag):
     aspect_ratio = 0.66 * (1+num_slices) / len(ns)
     nx = round(5.125 * 300)
     show_or_export_plot(p, f'checkerboard-3d{tag}.svg', aspect=aspect_ratio, nx=nx)
-    fixup_svg(f'checkerboard-3d{tag}.svg')
+    if not is_interactive():
+        fixup_svg(f'checkerboard-3d{tag}.svg')
 
 
 if __name__ == '__main__':
