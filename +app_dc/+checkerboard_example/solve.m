@@ -1,4 +1,4 @@
-function timings = solve(dim, n, ref, ref_synth, tag, inv_solver_type)
+function timings = solve(dim, n, ref, ref_synth, beta, tag, inv_solver_type)
     % Run electrical resistivity tomography demo with checkerboard pattern
     %
     % INPUT PARAMETERS
@@ -7,6 +7,7 @@ function timings = solve(dim, n, ref, ref_synth, tag, inv_solver_type)
     %                       or Vector[2, 1] of positive integers (dim=3)
     %   ref             ... inversion mesh refinement level
     %   ref_synth       ... synthetic mesh refinement level
+    %   beta            ... positive regularization parameter
     %   tag             ... basename for output files
     %   inv_solver_type ... type of regularization solver, e.g.,
     %                       'direct', 'krylov', or 'krylov-no-woodbury'
@@ -91,12 +92,6 @@ function timings = solve(dim, n, ref, ref_synth, tag, inv_solver_type)
                                                          inv_solver_type);
 
     % Iteration parameters
-    switch dim
-    case 2
-        beta = 1e-1;
-    case 3
-        beta = 1e5;
-    end
     maxit = 2;
 
     t_observe = [];
