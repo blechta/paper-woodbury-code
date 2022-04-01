@@ -1,86 +1,74 @@
-plot_performance_characteristics_compare('2d', '2dfw', '2dnw');
-plot_performance_characteristics_compare('3d', '3dfw', '3dnw');
-plot_performance_characteristics_compare('2ddir', '2dfw', '2dnw', '2ddir');
-plot_performance_characteristics_compare('3ddir', '3dfw', '3dnw', '3ddir');
+plot_performance_characteristics_compare({'2dfw', '2dnw', '2ddir'});
+saveas(gcf, 'checkerboard-2d-normal.pdf');
+export_tikz('checkerboard-2d-normal.tex');
+plot_performance_characteristics_compare({'3dfw', '3dnw', '3ddir'});
+saveas(gcf, 'checkerboard-3d-normal.pdf');
+export_tikz('checkerboard-3d-normal.tex');
 
 
-function plot_performance_characteristics_compare(output_tag, tag1, tag2, tag3)
-
-    matfile1 = load(sprintf('checkerboard-timings-%s.mat', tag1));
-    matfile2 = load(sprintf('checkerboard-timings-%s.mat', tag2));
-    timings1 = matfile1.timings;
-    timings2 = matfile2.timings;
-
-    t_normal1 = vertcat(timings1.t_normal);
-    t_normal2 = vertcat(timings2.t_normal);
-    num_dofs_inv1 = vertcat(timings1.num_dofs_inv);
-    num_dofs_inv2 = vertcat(timings2.num_dofs_inv);
-    num_obs1 = vertcat(timings1.num_obs);
-    num_obs2 = vertcat(timings2.num_obs);
-
-    if nargin > 3
-        matfile3 = load(sprintf('checkerboard-timings-%s.mat', tag3));
-        timings3 = matfile3.timings;
-        t_normal3 = vertcat(timings3.t_normal);
-        num_dofs_inv3 = vertcat(timings3.num_dofs_inv);
-        num_obs3 = vertcat(timings3.num_obs);
-    end
+function plot_performance_characteristics_compare(tags)
 
     figure();
-    p = loglog(num_obs1.*num_dofs_inv1, t_normal1(:, :), 'x');
-    p(1).Marker = 'x';
-    p(2).Marker = '+';
-    xlabel('$MN$', 'interpreter', 'latex');
-    ylabel('$t_{\mathrm{norm}}$ [s]', 'interpreter', 'latex');
+    labels = {};
+    markers_seq = 'x+dsv^';
 
-    hold on;
+    for tag = tags
+        tag = tag{:};
+        matfile = load(sprintf('checkerboard-timings-%s.mat', tag));
+        timings = matfile.timings;
+        t_normal = vertcat(timings.t_normal);
+        num_dofs_inv = vertcat(timings.num_dofs_inv);
+        num_obs = vertcat(timings.num_obs);
 
-    p = loglog(num_obs2.*num_dofs_inv2, t_normal2(:, :), 'x');
-    p(1).Marker = 'd';
-    p(2).Marker = 's';
+        p = loglog(num_obs.*num_dofs_inv, t_normal(:, :), 'x');
+        hold on;
+        p(1).Marker = markers_seq(1);
+        p(2).Marker = markers_seq(2);
+        markers_seq = circshift(markers_seq, -2);
 
-    if nargin > 3
-        p = loglog(num_obs3.*num_dofs_inv3, t_normal3(:, :), 'x');
-        p(1).Marker = 'v';
-        p(2).Marker = '^';
+        for i = 1:size(t_normal, 2)
+            labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc(tag));  %#ok<AGROW>
+        end
+
     end
 
-    [slope_x_, slope_y_] = get_slope(num_obs1.*num_dofs_inv1, t_normal1(:, end), 1);
+    tag = tags{1};
+    matfile = load(sprintf('checkerboard-timings-%s.mat', tag));
+    timings = matfile.timings;
+    t_normal = vertcat(timings.t_normal);
+    num_dofs_inv = vertcat(timings.num_dofs_inv);
+    num_obs = vertcat(timings.num_obs);
+
+    [slope_x_, slope_y_] = get_slope(num_obs.*num_dofs_inv, t_normal(:, end), 1);
     loglog(slope_x_, slope_y_, '--');
 
-    x2 = num_dofs_inv1.*num_obs1;
-    y2 = num_dofs_inv1.*num_obs1.^2;
+    x2 = num_dofs_inv.*num_obs;
+    y2 = num_dofs_inv.*num_obs.^2;
     y2 = y2 * slope_y_(end) / y2(end);
-    ymin = min(t_normal1(:));
+    ymin = min(t_normal(:));
     x2 = x2(y2>=ymin);
     y2 = y2(y2>=ymin);
     loglog(x2, y2, '-.');
 
-    labels = {};
-    for i = 1:size(t_normal1, 2)
-        labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc(tag1));  %#ok<AGROW>
-    end
-    for i = 1:size(t_normal2, 2)
-        labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc(tag2));  %#ok<AGROW>
-    end
-    if nargin > 3
-        for i = 1:size(t_normal3, 2)
-            labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc(tag3));  %#ok<AGROW>
-        end
-    end
     labels{end+1} = 'slope $O(M N)$';
     labels{end+1} = 'slope $O(M^2 N)$';
-    legend(labels, 'Location', 'northwest', 'interpreter', 'latex');
+    legend(labels, 'Location', 'northeastoutside', 'interpreter', 'latex');
 
-    saveas(gcf, sprintf('checkerboard-%s-normal.pdf', output_tag));
-    export_tikz(sprintf('checkerboard-%s-normal.tex', output_tag));
+    xlabel('$MN$', 'interpreter', 'latex');
+    ylabel('$t_{\mathrm{norm}}$ [s]', 'interpreter', 'latex');
+
+    ytickangle(90);
+
+    ax = gca;
+    ax.PlotBoxAspectRatioMode = 'manual';
+    ax.PlotBoxAspectRatio = [1, 1, 1];
 
 end
 
 
 function desc = tag_to_desc(tag)
-    switch tag(3:end)
-    case 'dir'
+    switch tag(3:4)
+    case 'di'
         desc = 'Algorithm~\ref{alg:gn-direct}';
     case 'fw'
         desc = 'Algorithm~\ref{alg:gnstep-iterative}';
@@ -106,6 +94,8 @@ function export_tikz(filename)
         'height'; '\figheight';
         'parseStrings'; false;
         'extraTikzpictureOptions'; {'trim axis left', 'trim axis right'};
+        'extraAxisOptions'; {'xlabel near ticks', 'ylabel near ticks', ...
+                             'yticklabel style={anchor=south west,xshift=-2.5mm}'};
     };
 
     try

@@ -1,12 +1,12 @@
-ns = [4, 8, 16, 32, 64, 128, 256];
+ns = [4, 8, 16, 32, 64];
 
 figure();
 pos = get(gcf(), 'Position');
-set(gcf(), 'Position', [pos(1), pos(2), 1400, 600]);
+set(gcf(), 'Position', [pos(1), pos(2), 1000, 600]);
 
 layout = tiledlayout(1, numel(ns));
-layout.Padding = 'compact';
-layout.TileSpacing = 'none';
+%layout.Padding = 'compact';
+%layout.TileSpacing = 'none';
 
 for i = 1:numel(ns)
 
@@ -23,9 +23,9 @@ for i = 1:numel(ns)
 
     tstr1 = sprintf('$N^{\\mathrm{ele}} = %d$', num_electrodes_1d);
     tstr2 = sprintf('$M = %d$', num_configs);
-    t = title({tstr1, tstr2}, 'rotation', 90, 'interpreter', 'latex');
+    t = title({tstr1, tstr2}, 'rotation', 0, 'interpreter', 'latex');
     tpos = get(t, 'position');
-    set(t, 'position', tpos+[0.365*num_electrodes_1d, +1.06*num_configs+3, 0]);
+    set(t, 'position', tpos+[0.5*num_electrodes_1d, -0.02*num_configs, 0]);
 
     hold('on');
     if i == 1 || i == 2
@@ -46,18 +46,14 @@ for i = 1:numel(ns)
     [a, b] = deal(1, num_electrodes_1d);
     xticks([a, 0.75*a+0.25*b, 0.5*a+0.5*b, 0.25*a+0.75*b, b]);
     xticklabels({'-50', '-25', '0', '25', '50'});
-    xtickangle(90);
+    xtickangle(0);
     ytickangle(90);
 
-    xlabel('$x$', 'rotation', 90, 'interpreter', 'latex');
+    xlabel('$x$', 'rotation', 0, 'interpreter', 'latex');
 
     set(gca, 'TickLabelInterpreter', 'latex');
-    set(gca, 'XDir', 'reverse');
-    set(gca, 'YDir', 'normal');
-
-    ax = gca;
-    ax.XLabel.Position(1) = ax.XLabel.Position(1) + 0.09*num_electrodes_1d;
-    ax.XLabel.Position(2) = ax.XLabel.Position(2) - 0.01*num_configs - 2;
+    set(gca, 'XDir', 'normal');
+    set(gca, 'YDir', 'reverse');
 
 end
 
@@ -65,7 +61,7 @@ set(gcf(), 'PaperOrientation', 'landscape');
 set(gcf(), 'PaperUnits', 'normalized');
 set(gcf(), 'PaperPosition', [0 0 1 1]);
 saveas(gcf(), 'checkerboard-survey.pdf');
-%export_tikz('checkerboard-survey.tex');
+export_tikz('checkerboard-survey.tex');
 
 
 function export_tikz(filename)
