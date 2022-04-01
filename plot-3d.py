@@ -394,6 +394,7 @@ def read_file(filename):
 
 _datasets = {}
 
+
 def get_dataset(filename):
     try:
         dataset = _datasets[filename]
@@ -408,6 +409,19 @@ def get_dataset(filename):
         #print(f"'{filename}': min = {dataset.active_scalars.min()}, "
         #      f"max = {dataset.active_scalars.max()}")
     return dataset
+
+
+def get_filename(tag1, tag2, n):
+    if tag1 == 'true':
+        part1 = 'checkerboard-resistivity-true'
+    elif tag1 == 'inv':
+        part1 = 'checkerboard-resistivity'
+    if '-' in tag2:
+        tag2, tag3 = tag2.split('-')
+        filename = f'{part1}-3d{tag2}-2x{n}-{tag3}.xdmf'
+    else:
+        filename = f'{part1}-3d{tag2}-2x{n}.xdmf'
+    return filename
 
 
 def frame_subplots(plotter, sides='nwse', color='red', width=2.0):
@@ -454,7 +468,8 @@ def electrode_coords(n):
 
 
 def plot_true(plotter, tag, n, fake=False):
-    dataset = get_dataset(f"checkerboard-resistivity-true-3d{tag}-2x{n}.xdmf")
+    filename = get_filename('true', tag, n)
+    dataset = get_dataset(filename)
     if dataset is None:
         return
     bricks = dataset.threshold((7000-1, 7000))
@@ -471,7 +486,8 @@ def plot_true(plotter, tag, n, fake=False):
 
 
 def plot_inv(plotter, tag, n, z):
-    dataset = get_dataset(f"checkerboard-resistivity-3d{tag}-2x{n}.xdmf")
+    filename = get_filename('inv', tag, n)
+    dataset = get_dataset(filename)
     if dataset is None:
         return
     s = dataset.slice(normal=(0, 0, 1), origin=(0, 0, z))
@@ -560,6 +576,16 @@ if __name__ == '__main__':
     pv.global_theme.background = 'white'
     pv.global_theme.font.color = 'black'
     pv.global_theme.font.family = 'times'
-    main('fw')
+    #main('fw')
     #main('nw')
     #main('dir')
+    main('fw-beta50')
+    main('nw-beta50')
+    main('fw-beta45')
+    main('nw-beta45')
+    main('fw-beta40')
+    main('nw-beta40')
+    main('fw-beta35')
+    main('nw-beta35')
+    main('fw-beta30')
+    main('nw-beta30')
