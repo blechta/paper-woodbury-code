@@ -511,21 +511,21 @@ def add_cbar(plotter):
         cbar.SetAnnotationLeaderPadding(40)
 
 
-def main(tag):
-    num_slices = 8
-    ns = [2, 3, 4, 5]
+def plot_columns(cols, output_tag, num_slices=8):
+    cols = list(cols)
 
     p = pv.Plotter(off_screen=not is_interactive(),
-                   shape=(2+num_slices, len(ns)),
+                   shape=(2+num_slices, len(cols)),
                    row_weights=[0.5] + [1] + num_slices*[1],
                    groups=[(0, np.s_[:])],
                    border=False)
 
     # HACK: Make a fake plot in subplot allocated for colorbar
     p.subplot(0, 0)
-    plot_true(p, tag, ns[0], fake=True)
+    tag, n = cols[0]
+    plot_true(p, tag, n, fake=True)
 
-    for i, n in enumerate(ns):
+    for i, (tag, n) in enumerate(cols):
 
         # Plot true resistivity
         p.subplot(1, i)
@@ -535,21 +535,27 @@ def main(tag):
         zmin, zmax = -70/n, -0/n
         zs = np.linspace(zmax, zmin, num_slices)
 
+        # Get z-coord of bottom and top of the anomally
+        tol = 0.5*np.abs(np.diff(zs)).min()
+        anomally_zmin, = zs[np.isclose(zs, -20/n, atol=tol)]
+        anomally_zmax, = zs[np.isclose(zs, -10/n, atol=tol)]
+
         # Plot slices of inversion results
         for j, z in zip(range(2, num_slices+2), zs):
             p.subplot(j, i)
             plot_inv(p, tag, n, z)
             add_cbar(p)
 
-    # Border hard-coded(!) subplots with red border
-    p.subplot(3, 0); frame_subplots(p, 'wn')
-    p.subplot(3, 1); frame_subplots(p, 'n')
-    p.subplot(3, 2); frame_subplots(p, 'n')
-    p.subplot(3, 3); frame_subplots(p, 'ne')
-    p.subplot(4, 0); frame_subplots(p, 'ws')
-    p.subplot(4, 1); frame_subplots(p, 's')
-    p.subplot(4, 2); frame_subplots(p, 's')
-    p.subplot(4, 3); frame_subplots(p, 'se')
+            # Install red frame around slices cutting the anomally
+            p.subplot(j, i)
+            if z == anomally_zmin:
+                frame_subplots(p, 's')
+            if z == anomally_zmax:
+                frame_subplots(p, 'n')
+            if i == 0 and z >= anomally_zmin and z <= anomally_zmax:
+                frame_subplots(p, 'w')
+            if i == len(cols)-1 and z >= anomally_zmin and z <= anomally_zmax:
+                frame_subplots(p, 'e')
 
     p.link_views()
     p.camera_position = [
@@ -561,11 +567,13 @@ def main(tag):
     p.subplot(2, 0)
     p.reset_camera_clipping_range()
 
-    aspect_ratio = 0.66 * (1+num_slices) / len(ns)
+    aspect_ratio = 0.66 * (1+num_slices) / len(cols)
     nx = round(5.125 * 300)
-    show_or_export_plot(p, f'checkerboard-3d{tag}.svg', aspect=aspect_ratio, nx=nx)
+    show_or_export_plot(p, f'checkerboard-3d{output_tag}.svg',
+                        aspect=aspect_ratio, nx=nx)
     if not is_interactive():
-        fixup_svg(f'checkerboard-3d{tag}.svg')
+        fixup_svg(f'checkerboard-3d{output_tag}.svg')
+
 
 
 if __name__ == '__main__':
@@ -576,16 +584,15 @@ if __name__ == '__main__':
     pv.global_theme.background = 'white'
     pv.global_theme.font.color = 'black'
     pv.global_theme.font.family = 'times'
-    #main('fw')
-    #main('nw')
-    #main('dir')
-    main('fw-beta50')
-    main('nw-beta50')
-    main('fw-beta45')
-    main('nw-beta45')
-    main('fw-beta40')
-    main('nw-beta40')
-    main('fw-beta35')
-    main('nw-beta35')
-    main('fw-beta30')
-    main('nw-beta30')
+
+    plot_columns(zip(4*['fw' ], [2, 3, 4, 5]), 'fw')
+    plot_columns(zip(4*['nw' ], [2, 3, 4, 5]), 'nw')
+    plot_columns(zip(4*['dir'], [2, 3, 4, 5]), 'dir')
+    cols = [
+        ('fw-beta50', 4),
+        ('fw-beta45', 4),
+        ('fw-beta40', 4),
+        ('fw-beta35', 4),
+        ('fw-beta30', 4),
+    ]
+    plot_columns(cols, 'fw-beta')

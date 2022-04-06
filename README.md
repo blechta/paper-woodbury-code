@@ -47,7 +47,7 @@ support, which is not featured on PyPI. One can circumvent this
 by using Docker.
 ```
 docker build -t pyvista dockerfiles/
-docker run --rm -v "$PWD":/tmp pyvista python3 plot-3d.py
+docker run --rm -v "$PWD":/tmp pyvista python3 -u plot-3d.py
 ```
 This produces `checkerboard-3dfw.svg`.
 
