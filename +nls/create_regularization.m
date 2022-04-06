@@ -226,6 +226,7 @@ function func = create_solver_krylov_woodbury(M, D, variant)
     assert(issparse(Sdiag));
     clear Mdiag_inv_mat;
     amg_S = solving.HSLMI20(Sdiag);
+    fprintf('HSLMI20:\n'); disp(amg_S.inform);
 
     % Preconditioner for Hdiv block: scaling by inverse diagonal of mass
     % TODO: Try Chebyshev+Jacobi with full M?
