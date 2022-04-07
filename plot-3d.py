@@ -495,9 +495,10 @@ def plot_true(plotter, tag, n, fake=False):
     plotter.add_mesh(electrodes, color='black', point_size=ps)
     beta = extract_beta(tag)
     if beta is not None:
-        plotter.add_text(fr"\beta = {beta}",
-                         position='upper_edge',
-                         font_size=12)
+        text = plotter.add_text(fr"\beta = {beta}",
+                                position=(0.5, 1), viewport=True,
+                                font_size=12)
+        text.GetTextProperty().SetJustification(1)
 
 
 def plot_inv(plotter, tag, n, z):
@@ -514,11 +515,11 @@ def plot_inv(plotter, tag, n, z):
                      font_size=12)
 
 
-def add_cbar(plotter):
+def add_cbar(plotter, position_y, height):
     plotter.subplot(0, 0)
-    cbar = plotter.add_scalar_bar(above_label='7000', height=0.5,
-                                  position_x=0.1, position_y=0.5,
-                                  width=0.8,
+    cbar = plotter.add_scalar_bar(above_label='7000',
+                                  position_x=0.1, position_y=position_y,
+                                  width=0.8, height=height,
                                   fmt="%.0f", label_font_size=24,
                                   title_font_size=12)
     if cbar is not None:
@@ -529,9 +530,15 @@ def add_cbar(plotter):
 def plot_columns(cols, output_tag, num_slices=8):
     cols = list(cols)
 
+    have_beta_labels = any('beta' in col[0] for col in cols)
+    if have_beta_labels:
+        row_weights = [0.85] + [1] + num_slices*[1]
+    else:
+        row_weights = [0.5] + [1] + num_slices*[1]
+
     p = pv.Plotter(off_screen=not is_interactive(),
                    shape=(2+num_slices, len(cols)),
-                   row_weights=[0.5] + [1] + num_slices*[1],
+                   row_weights=row_weights,
                    groups=[(0, np.s_[:])],
                    border=False)
 
@@ -559,7 +566,10 @@ def plot_columns(cols, output_tag, num_slices=8):
         for j, z in zip(range(2, num_slices+2), zs):
             p.subplot(j, i)
             plot_inv(p, tag, n, z)
-            add_cbar(p)
+
+            pos_y = 0.75 if have_beta_labels else 0.5
+            height = 0.25 / row_weights[0]
+            add_cbar(p, pos_y, height)
 
             # Install red frame around slices cutting the anomally
             p.subplot(j, i)
@@ -582,7 +592,7 @@ def plot_columns(cols, output_tag, num_slices=8):
     p.subplot(2, 0)
     p.reset_camera_clipping_range()
 
-    aspect_ratio = 0.66 * (1+num_slices) / len(cols)
+    aspect_ratio = 0.66 * sum(row_weights) / len(cols)
     nx = round(5.125 * 300)
     show_or_export_plot(p, f'checkerboard-3d{output_tag}.svg',
                         aspect=aspect_ratio, nx=nx)
@@ -601,13 +611,13 @@ if __name__ == '__main__':
     pv.global_theme.font.family = 'times'
 
     plot_columns(zip(4*['fw' ], [2, 3, 4, 5]), 'fw')
-    plot_columns(zip(4*['nw' ], [2, 3, 4, 5]), 'nw')
-    plot_columns(zip(4*['dir'], [2, 3, 4, 5]), 'dir')
+    #plot_columns(zip(4*['nw' ], [2, 3, 4, 5]), 'nw')
+    #plot_columns(zip(4*['dir'], [2, 3, 4, 5]), 'dir')
     cols = [
-        ('fw-beta30', 2),
-        ('fw-beta35', 2),
-        ('fw-beta40', 2),
-        ('fw-beta45', 2),
-        ('fw-beta50', 2),
+        ('fw-beta30', 4),
+        ('fw-beta35', 4),
+        ('fw-beta40', 4),
+        ('fw-beta45', 4),
+        ('fw-beta50', 4),
     ]
     plot_columns(cols, 'fw-beta')
