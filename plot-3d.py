@@ -360,6 +360,8 @@ def fixup_svg(fname_in, fname_out=None):
             y = float(node.attrib['y'])
             node.attrib['dy'] = '0'
             node.attrib['y'] = f'{y+dy}'
+        # Make all text TeX math
+        node.text = f'${node.text}$'
     if fname_out is None:
         fname_out = fname_in
     tree.write(fname_out)
@@ -467,6 +469,14 @@ def electrode_coords(n):
     return pv.wrap(XYZ)
 
 
+def extract_beta(tag):
+    pos = tag.find('beta')
+    if pos == -1:
+        return None
+    exponent = int(tag[pos+4:]) / 10
+    return f'10^{{{exponent}}}'
+
+
 def plot_true(plotter, tag, n, fake=False):
     filename = get_filename('true', tag, n)
     dataset = get_dataset(filename)
@@ -483,6 +493,11 @@ def plot_true(plotter, tag, n, fake=False):
     electrodes = electrode_coords(n)
     ps = {2: 4, 3: 3, 4: 2, 5: 2}[n]
     plotter.add_mesh(electrodes, color='black', point_size=ps)
+    beta = extract_beta(tag)
+    if beta is not None:
+        plotter.add_text(fr"\beta = {beta}",
+                         position='upper_edge',
+                         font_size=12)
 
 
 def plot_inv(plotter, tag, n, z):
@@ -494,9 +509,9 @@ def plot_inv(plotter, tag, n, z):
     plotter.add_mesh(s, show_scalar_bar=False,
                      above_color='red',
                      lighting=False)
-    text = plotter.add_text(f"z = {abs(z):.2f}",
-                            position=(8, 6),
-                            font_size=12)
+    plotter.add_text(f"z = {abs(z):.2f}",
+                     position=(8, 6),
+                     font_size=12)
 
 
 def add_cbar(plotter):
@@ -589,10 +604,10 @@ if __name__ == '__main__':
     plot_columns(zip(4*['nw' ], [2, 3, 4, 5]), 'nw')
     plot_columns(zip(4*['dir'], [2, 3, 4, 5]), 'dir')
     cols = [
-        ('fw-beta50', 4),
-        ('fw-beta45', 4),
-        ('fw-beta40', 4),
-        ('fw-beta35', 4),
-        ('fw-beta30', 4),
+        ('fw-beta30', 2),
+        ('fw-beta35', 2),
+        ('fw-beta40', 2),
+        ('fw-beta45', 2),
+        ('fw-beta50', 2),
     ]
     plot_columns(cols, 'fw-beta')
