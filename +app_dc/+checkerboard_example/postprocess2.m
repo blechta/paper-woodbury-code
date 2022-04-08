@@ -1,12 +1,17 @@
-plot_performance_characteristics_compare({'2dfw', '2dnw', '2ddir'});
+plot_performance_characteristics_compare({'2dfw', '2dnw', '2ddir'}, 0.2);
+title('2D', 'interpreter', 'latex');
 saveas(gcf, 'checkerboard-2d-normal.pdf');
 export_tikz('checkerboard-2d-normal.tex');
-plot_performance_characteristics_compare({'3dfw', '3dnw', '3ddir'});
+
+plot_performance_characteristics_compare({'3dfw', '3dnw', '3ddir'}, 0.7);
+title('3D \normalfont ($\beta=10^5$)', 'interpreter', 'latex');
+%plot_performance_characteristics_compare({'3dfw-beta30', '3dnw-beta30'}, 0.7);
+%title('3D \normalfont ($\beta=10^3$)', 'interpreter', 'latex');
 saveas(gcf, 'checkerboard-3d-normal.pdf');
 export_tikz('checkerboard-3d-normal.tex');
 
 
-function plot_performance_characteristics_compare(tags)
+function plot_performance_characteristics_compare(tags, shift)
 
     figure();
     labels = {};
@@ -40,6 +45,7 @@ function plot_performance_characteristics_compare(tags)
     num_obs = vertcat(timings.num_obs);
 
     [slope_x_, slope_y_] = get_slope(num_obs.*num_dofs_inv, t_normal(:, end), 1);
+    slope_y_ = shift*slope_y_;
     loglog(slope_x_, slope_y_, '--');
 
     x2 = num_dofs_inv.*num_obs;

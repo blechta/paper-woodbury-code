@@ -1,26 +1,36 @@
-plot_performance_characteristics_compare_beta('t_normal');
+% Select case to plot
+n = [2, 4];
+Nele = 289;
+N = 452736;
+M = 1564;
+t = sprintf('3D \\normalfont ($N^\\mathrm{ele}=%d$, $N=%d$, $M=%d$)', Nele, N, M);
+
+plot_performance_characteristics_compare_beta('t_normal', n);
 ylabel('$t_{\mathrm{norm}}$ [s]', 'interpreter', 'latex');
+title(t, 'interpreter', 'latex');
 saveas(gcf, 'checkerboard-3d-beta-tnormal.pdf');
 export_tikz('checkerboard-3d-beta-tnormal.tex');
 
-plot_performance_characteristics_compare_beta('iter_normal');
+plot_performance_characteristics_compare_beta('iter_normal', n);
 ylabel('$n_{\mathrm{iter}}$', 'interpreter', 'latex');
+title(t, 'interpreter', 'latex');
 saveas(gcf, 'checkerboard-3d-beta-niter.pdf');
 export_tikz('checkerboard-3d-beta-niter.tex');
 
-plot_performance_characteristics_compare_beta('misfit');
+plot_performance_characteristics_compare_beta('misfit', n);
 ylabel('misfit', 'interpreter', 'latex');
+title(t, 'interpreter', 'latex');
 saveas(gcf, 'checkerboard-3d-beta-misfit.pdf');
 export_tikz('checkerboard-3d-beta-misfit.tex');
 
 
-function plot_performance_characteristics_compare_beta(yfield);
+function plot_performance_characteristics_compare_beta(yfield, n);
 
     figure();
     labels = {};
 
     tags = {'3dfw-beta50', '3dfw-beta45', '3dfw-beta40', '3dfw-beta35', '3dfw-beta30'};
-    [beta, y] = extract_data(tags, yfield);
+    [beta, y] = extract_data(tags, yfield, n);
     p = loglog(beta, y, 'x');
     p(1).Marker = 'x';
     p(2).Marker = '+';
@@ -31,7 +41,7 @@ function plot_performance_characteristics_compare_beta(yfield);
     hold on;
 
     tags = {'3dnw-beta50', '3dnw-beta45', '3dnw-beta40', '3dnw-beta35', '3dnw-beta30'};
-    [beta, y] = extract_data(tags, yfield);
+    [beta, y] = extract_data(tags, yfield, n);
     p = loglog(beta, y, 'x');
     p(1).Marker = 'd';
     p(2).Marker = 's';
@@ -51,9 +61,8 @@ function plot_performance_characteristics_compare_beta(yfield);
 end
 
 
-function [data_x, data_y] = extract_data(tags, y_name)
+function [data_x, data_y] = extract_data(tags, y_name, n)
 
-    n = [2, 4];  % hard-coded case to filter (anomally blocks count x, y)
     data_x = double.empty(0, 2);  % hard-coded number of GN iterations!
     data_y = double.empty(0, 2);  % hard-coded number of GN iterations!
 
