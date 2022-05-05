@@ -110,6 +110,10 @@ function timings = solve(dim, n, ref, ref_synth, beta, tag, inv_solver_type)
         [d, J] = assemble_observation(sigma);
         t_observe(i) = toc(t);  %#ok<AGROW>
 
+        % Report
+        misfit(i) = norm(d - measured_values);  %#ok<AGROW>
+        fprintf('Misfit = %f\n', misfit(i));
+
         %% Dump sensitivity to file
         %plot_sensitivity(mesh, J, sigma, sprintf('%s-iter%02d', tag, i));
 
@@ -125,11 +129,8 @@ function timings = solve(dim, n, ref, ref_synth, beta, tag, inv_solver_type)
         sigma(:) = exp(m);
         t_normal(i) = toc(t);  %#ok<AGROW>
 
-        misfit(i) = norm(d - measured_values);  %#ok<AGROW>
-
         % Report
         fprintf('i = %d, Beta = %f, ||dm|| = %f\n', i, beta, norm(dm, 2));
-        fprintf('Misfit = %f\n', misfit(i));
         fprintf('Min sigma, max sigma: %f %f\n', min(sigma), max(sigma));
 
         % Plot current value of resistivity
@@ -148,6 +149,11 @@ function timings = solve(dim, n, ref, ref_synth, beta, tag, inv_solver_type)
             beta = 0.5*beta;
         end
     end
+
+    % Report
+    d = assemble_observation(sigma);
+    misfit(end+1) = norm(d - measured_values);  %#ok<AGROW>
+    fprintf('Misfit = %f\n', misfit(end));
 
     timings = struct();
     timings.n = n;

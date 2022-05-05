@@ -30,22 +30,24 @@ function plot_performance_characteristics_compare_beta(yfield, n);
     labels = {};
 
     tags = {'3dfw-beta50', '3dfw-beta45', '3dfw-beta40', '3dfw-beta35', '3dfw-beta30'};
-    [beta, y] = extract_data(tags, yfield, n);
+    [beta, y, iter] = extract_data(tags, yfield, n);
     p = loglog(beta, y, 'x');
-    p(1).Marker = 'x';
-    p(2).Marker = '+';
-    for i = 1:size(y, 2)
+    markers = 'ox+*._|';
+    markers = num2cell(markers(mod(iter, numel(markers))+1));
+    [p.Marker] = deal(markers{:});
+    for i = iter
         labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc('3dfw'));  %#ok<AGROW>
     end
 
     hold on;
 
     tags = {'3dnw-beta50', '3dnw-beta45', '3dnw-beta40', '3dnw-beta35', '3dnw-beta30'};
-    [beta, y] = extract_data(tags, yfield, n);
+    [beta, y, iter] = extract_data(tags, yfield, n);
     p = loglog(beta, y, 'x');
-    p(1).Marker = 'd';
-    p(2).Marker = 's';
-    for i = 1:size(y, 2)
+    markers = 'ods^v><';
+    markers = num2cell(markers(mod(iter, numel(markers))+1));
+    [p.Marker] = deal(markers{:});
+    for i = iter
         labels{end+1} = sprintf('$i=%d$ (%s)', i, tag_to_desc('3dnw'));  %#ok<AGROW>
     end
 
@@ -61,10 +63,9 @@ function plot_performance_characteristics_compare_beta(yfield, n);
 end
 
 
-function [data_x, data_y] = extract_data(tags, y_name, n)
-
-    data_x = double.empty(0, 2);  % hard-coded number of GN iterations!
-    data_y = double.empty(0, 2);  % hard-coded number of GN iterations!
+function [data_x, data_y, iter] = extract_data(tags, y_name, n)
+    data_x = {};
+    data_y = {};
 
     for tag = tags
         tag = tag{:};
@@ -76,8 +77,24 @@ function [data_x, data_y] = extract_data(tags, y_name, n)
         if ind == 0
             continue
         end
-        data_x(end+1, :) = x(ind, :);
-        data_y(end+1, :) = y(ind, :);
+        data_x{end+1, 1} = x(ind, :);
+        data_y{end+1, 1} = y(ind, :);
+    end
+
+    data_x = cell2mat(data_x);
+    data_y = cell2mat(data_y);
+
+    if size(data_x, 2) == size(data_y, 2)
+        assert(~strcmp(y_name, 'misfit'));
+        % we have data at iteration 1, 2, ...
+        iter = 1:size(data_x, 2);
+    elseif size(data_x, 2) + 1 == size(data_y, 2)
+        assert(strcmp(y_name, 'misfit'));
+        % pad values (we have misfit at iteration 0, 1, ...)
+        data_x = [data_x(:, 1), data_x];
+        iter = 0:size(data_x, 2)-1;
+    else
+        error('Don''t know how to handle the data');
     end
 end
 
