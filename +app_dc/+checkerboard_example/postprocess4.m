@@ -102,11 +102,11 @@ end
 function desc = tag_to_desc(tag)
     switch tag(3:4)
     case 'di'
-        desc = 'Algorithm~\ref{alg:gn-direct}';
+        desc = '\cref{alg:gn-direct}';
     case 'fw'
-        desc = 'Algorithm~\ref{alg:gnstep-iterative}';
+        desc = '\cref{alg:gnstep-iterative}';
     case 'nw'
-        desc = 'Algorithm~\ref{alg:gnstep-iterative-nw}';
+        desc = '\cref{alg:gnstep-iterative-nw}';
     end
 end
 
