@@ -68,7 +68,19 @@ function compose_resistivity_figure_2d(tag, ns)
     end
 
     cbar = colorbar('Location', 'northoutside', 'TickLabelInterpreter', 'latex');
-    cbar.Position = [0.05, 1-0.7*cbar_height, 0.9, 0.2*cbar_height];
+    cbar.FontName = 'cmr';
+    cbar.FontSize = 12;
+    cbar.TickLabelInterpreter = 'latex';
+    %cbar.Box = 'off';
+    %cbar.LineWidth = 1e-323;
+    %cbar.TickLength = 0;
+    cbar.Position = [0.1, 1-0.7*cbar_height, 0.75, 0.2*cbar_height];
+    anno_position = [0.86, 1-0.7*cbar_height, 0.2*cbar_height*aspect_ratio, 0.2*cbar_height];
+    line_x = [0.86 + 0.1*cbar_height*aspect_ratio, 0.86 + 0.1*cbar_height*aspect_ratio];
+    line_y = [1-0.7*cbar_height - 0.01, 1-0.7*cbar_height - 0.001];
+    annotation(fig, 'rectangle', anno_position, 'FaceColor', 'r', 'LineStyle', 'none');
+    annotation('textarrow', line_x, line_y, 'String', '7000', 'HeadStyle', 'none', ...
+               'FontName', 'cmr', 'FontSize', 12, 'Interpreter', 'latex', 'TextMargin', 0.05);
 
     set(fig, 'PaperUnits', 'points');
     set(fig, 'PaperSize', dpi*[paperw, paperw*aspect_ratio]);
