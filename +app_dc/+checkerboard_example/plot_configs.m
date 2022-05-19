@@ -29,7 +29,7 @@ for i = 1:numel(ns)
 
     hold('on');
     if i == 1 || i == 2
-        unused = Mtx == 0 | Mtx == 0;
+        unused = Mtx == 0 & Mrx == 0;
         spy(unused.', 'k.', 1);
     end
     spy(Mtx.', 'rv', 0.7*marker_size);
