@@ -68,8 +68,18 @@ function [data_x, data_y, iter] = extract_data(tags, y_name, n)
     data_y = {};
 
     for tag = tags
-        tag = tag{:};
-        matfile = load(sprintf('checkerboard-timings-%s.mat', tag));
+        filename = sprintf('checkerboard-timings-%s.mat', tag{:});
+        try
+            matfile = load(filename);
+        catch ME
+            switch ME.identifier
+            case 'MATLAB:load:couldNotReadFile'
+                warning('Could not open ''%s''. Skipping...', filename);
+                continue
+            otherwise
+                rethrow(ME)
+            end
+        end
         timings = matfile.timings;
         x = vertcat(timings.('beta'));
         y = vertcat(timings.(y_name));
@@ -119,7 +129,7 @@ function export_tikz(filename)
         'width'; '\figwidth';
         'height'; '\figheight';
         'parseStrings'; false;
-        'extraTikzpictureOptions'; {'trim axis left', 'trim axis right'};
+        'extraTikzpictureOptions'; {};
         'extraAxisOptions'; {'xlabel near ticks', 'ylabel near ticks', ...
                              'yticklabel style={anchor=south west,xshift=-2.5mm}'};
     };

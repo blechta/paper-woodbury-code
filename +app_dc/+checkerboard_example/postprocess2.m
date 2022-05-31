@@ -99,7 +99,7 @@ function export_tikz(filename)
         'width'; '\figwidth';
         'height'; '\figheight';
         'parseStrings'; false;
-        'extraTikzpictureOptions'; {'trim axis left', 'trim axis right'};
+        'extraTikzpictureOptions'; {};
         'extraAxisOptions'; {'xlabel near ticks', 'ylabel near ticks', ...
                              'yticklabel style={anchor=south west,xshift=-2.5mm}'};
     };

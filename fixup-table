@@ -16,7 +16,24 @@ def reformat_cols(cols):
     t3 = f'{float(t3):.4f}'
     tnorm = f'{float(tnorm):.2f}'
     cols = n1, n2, Nele, N, M, i, t1, t2, t3, niter, tnorm
-    return cols
+    return list(cols)
+
+
+def repetitions_to_multirow(lines, column_index, vpos=''):
+    last_row_index = 0
+    last_entry = lines[0][column_index]
+    for row_index, line in enumerate(lines):
+        entry = line[column_index]
+        if entry != last_entry:
+            multirow = fr'\multirow[{vpos}]{{{row_index-last_row_index}}}{{*}}{{{last_entry}}}'
+            lines[last_row_index][column_index] = multirow
+            last_row_index = row_index
+            last_entry = entry
+        else:
+            lines[row_index][column_index] = ''
+    else:
+        multirow = fr'\multirow[{vpos}]{{{row_index+1-last_row_index}}}{{*}}{{{last_entry}}}'
+        lines[last_row_index][column_index] = multirow
 
 
 for fn in files:
@@ -24,7 +41,10 @@ for fn in files:
     lines = text.strip().split(r'\\')
     for i, line in enumerate(lines):
         cols = line.strip().split('&')
-        cols = reformat_cols(cols)
-        lines[i] = ' & '.join(cols)
+        lines[i] = reformat_cols(cols)
+    for column_index in [0, 1, 2, 3, 4]:
+        repetitions_to_multirow(lines, column_index, vpos='t')
+    for i, line in enumerate(lines):
+        lines[i] = ' & '.join(line)
     text = r'\\'.join(lines)
     open(fn.rstrip('.tex') + '-new.tex', 'wt').write(text)
