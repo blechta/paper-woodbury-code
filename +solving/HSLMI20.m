@@ -33,19 +33,47 @@ classdef HSLMI20 < handle
             hsl_mi20('destroy', obj.handle);
         end
 
-        function [x, inform] = solve(obj, b)
+        function x = solve(obj, b, varargin)
             % Solve equation A*x = b
             %
-            % b can have multiple columns
+            % b can have multiple columns;  optional argument
+            % 'transpose_rhs' can be given to transpose b
 
-            % Allocate return values
-            x = zeros(size(b));
-            inform = obj.create_inform_struct(size(b, 2));
-
-            % Solve column-by-column
-            for j = 1:size(b, 2)
-                [x(:, j), inform(j)] = hsl_mi20('precondition', b(:, j), obj.handle);
+            % Parse optional arguments
+            if nargin == 2
+                transpose_rhs = false;
+            elseif nargin == 3
+                switch varargin{1}
+                case 'transpose_rhs'
+                    transpose_rhs = true;
+                case default
+                    error('Argument ''%s'' not understood', varargin{1});
+                end
+            else
+                error('Unexpected number of input arguments');
             end
+
+            % Allocate return value and solve column-by-column
+            if transpose_rhs
+                x = zeros(size(b, 2), size(b, 1));
+                for j = 1:size(b, 1)
+                    [x(:, j), ~] = hsl_mi20('precondition', b(j, :), obj.handle);
+                end
+            else
+                x = zeros(size(b));
+                for j = 1:size(b, 2)
+                    [x(:, j), ~] = hsl_mi20('precondition', b(:, j), obj.handle);
+                end
+            end
+        end
+
+        function x = precondition(obj, b)
+            % Solve equation A*x = b
+            %
+            % This method does not support multiple right-hand sides.
+            % Compared to the 'solve' method, this directly executes
+            % hsl_mi20('precondition', ...) without extra overhead.
+            [x, ~] = hsl_mi20('precondition', b, obj.handle);
         end
 
     end
@@ -63,10 +91,6 @@ classdef HSLMI20 < handle
                     rethrow(ME);
                 end
             end
-        end
-
-        function inform = create_inform_struct(n)
-            inform(1:n) = struct('flag', -Inf, 'clevels', 0, 'cpoints', 0, 'cnnz', 0);
         end
 
     end

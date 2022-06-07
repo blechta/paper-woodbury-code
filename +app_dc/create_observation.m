@@ -86,7 +86,7 @@ function func = create_fwd_solver_iterative(F)  %#ok<*MSNU,DEFNU>
         amg = solving.HSLMI20(A);
         U = zeros(size(F));
         for j = 1:size(F, 2)
-            U(:, j) = pcg(A, F(:,j), 1e-8, 100, @amg.solve);
+            U(:, j) = pcg(A, F(:,j), 1e-8, 100, @amg.precondition);
         end
         clear amg;
 

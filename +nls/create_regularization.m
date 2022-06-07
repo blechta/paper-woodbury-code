@@ -231,7 +231,7 @@ function func = create_solver_krylov_woodbury(M, D, variant)
     % Preconditioner for Hdiv block: scaling by inverse diagonal of mass
     % TODO: Try Chebyshev+Jacobi with full M?
     function x = precondition_mass(b)
-        x(:) = Mdiag_inv.*b;
+        x(:, 1) = Mdiag_inv.*b;
     end
 
     function [dm, iter, t1, t2, t3] = solver(J, beta, rhs)
@@ -257,7 +257,7 @@ function func = create_solver_krylov_woodbury(M, D, variant)
         % Preconditioner for perturbed Schur
         tmp_x2 = zeros(N2, 1);
         function x2 = precondition_schur(b2)
-            tmp_x2(:) = amg_S.solve(b2) + S_corr(b2);
+            tmp_x2(:, 1) = amg_S.precondition(b2) + S_corr(b2);
             x2 = tmp_x2;
             assert(isreal(x2));
         end
@@ -320,8 +320,7 @@ end
 function [S_corr, t1, t2, t3] = create_woodbury_schur_correction_(J, amg_S, beta)
 
     t_ = tic();
-    % TODO: Implement solve(J, 'transp') to avoid storing J.'
-    H = amg_S.solve(J.');
+    H = amg_S.solve(J, 'transpose_rhs');
     H = (1/sqrt(beta)) * H;
     t1 = toc(t_);
     assert(~issparse(H));
