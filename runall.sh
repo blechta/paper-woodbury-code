@@ -7,6 +7,7 @@ MATLAB_CMD="\
     app_dc.checkerboard_example.postprocess; \
     app_dc.checkerboard_example.postprocess2; \
     app_dc.checkerboard_example.postprocess3; \
+    app_dc.checkerboard_example.postprocess4; \
     app_dc.checkerboard_example.plot_configs; \
 "
 set -x
