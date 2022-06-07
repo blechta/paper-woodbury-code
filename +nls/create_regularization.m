@@ -225,7 +225,12 @@ function func = create_solver_krylov_woodbury(M, D, variant)
     Sdiag = D*Mdiag_inv_mat*D.';
     assert(issparse(Sdiag));
     clear Mdiag_inv_mat;
-    amg_S = solving.HSLMI20(Sdiag);
+    ctrl = hsl_mi20_control;
+    ctrl.st_parameter = 0.67;
+    ctrl.pre_smoothing = 1;
+    ctrl.post_smoothing = 1;
+    ctrl.smoother = 1;
+    amg_S = solving.HSLMI20(Sdiag, ctrl);
     fprintf('HSLMI20:\n'); disp(amg_S.inform);
 
     % Preconditioner for Hdiv block: scaling by inverse diagonal of mass
