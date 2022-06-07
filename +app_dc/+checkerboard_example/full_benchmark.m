@@ -13,7 +13,7 @@ timings(7) = app_dc.checkerboard_example.solve(2,  256, 1, 2, 0.1, '2ddir-n0256'
 save('checkerboard-timings-2ddir.mat', 'timings');
 
 clear('timings');
-imings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, 0.1, '2dfw-n0004', 'krylov-full-woodbury');  % ensure warm start
+timings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, 0.1, '2dfw-n0004', 'krylov-full-woodbury');  % ensure warm start
 timings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, 0.1, '2dfw-n0004', 'krylov-full-woodbury');
 timings(2) = app_dc.checkerboard_example.solve(2,    8, 1, 2, 0.1, '2dfw-n0008', 'krylov-full-woodbury');
 timings(3) = app_dc.checkerboard_example.solve(2,   16, 1, 2, 0.1, '2dfw-n0016', 'krylov-full-woodbury');
@@ -26,7 +26,7 @@ timings(9) = app_dc.checkerboard_example.solve(2, 1024, 1, 2, 0.1, '2dfw-n1024',
 save('checkerboard-timings-2dfw.mat', 'timings');
 
 clear('timings');
-imings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, 0.1, '2dnw-n0004', 'krylov-no-woodbury');  % ensure warm start
+timings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, 0.1, '2dnw-n0004', 'krylov-no-woodbury');  % ensure warm start
 timings(1) = app_dc.checkerboard_example.solve(2,    4, 1, 2, 0.1, '2dnw-n0004', 'krylov-no-woodbury');
 timings(2) = app_dc.checkerboard_example.solve(2,    8, 1, 2, 0.1, '2dnw-n0008', 'krylov-no-woodbury');
 timings(3) = app_dc.checkerboard_example.solve(2,   16, 1, 2, 0.1, '2dnw-n0016', 'krylov-no-woodbury');
