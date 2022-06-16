@@ -45,6 +45,7 @@ timings(1) = app_dc.checkerboard_example.solve(3, [2, 2], 2, 2, 1e5, '3dfw-2x2',
 timings(2) = app_dc.checkerboard_example.solve(3, [2, 3], 2, 2, 1e5, '3dfw-2x3', 'krylov-full-woodbury');
 timings(3) = app_dc.checkerboard_example.solve(3, [2, 4], 2, 2, 1e5, '3dfw-2x4', 'krylov-full-woodbury');
 timings(4) = app_dc.checkerboard_example.solve(3, [2, 5], 2, 2, 1e5, '3dfw-2x5', 'krylov-full-woodbury');
+timings(5) = app_dc.checkerboard_example.solve(3, [2, 6], 2, 2, 1e5, '3dfw-2x6', 'krylov-full-woodbury');
 save('checkerboard-timings-3dfw.mat', 'timings');
 
 clear('timings');
@@ -52,6 +53,7 @@ timings(1) = app_dc.checkerboard_example.solve(3, [2, 2], 2, 2, 1e5, '3dnw-2x2',
 timings(2) = app_dc.checkerboard_example.solve(3, [2, 3], 2, 2, 1e5, '3dnw-2x3', 'krylov-no-woodbury');
 timings(3) = app_dc.checkerboard_example.solve(3, [2, 4], 2, 2, 1e5, '3dnw-2x4', 'krylov-no-woodbury');
 timings(4) = app_dc.checkerboard_example.solve(3, [2, 5], 2, 2, 1e5, '3dnw-2x5', 'krylov-no-woodbury');
+timings(5) = app_dc.checkerboard_example.solve(3, [2, 6], 2, 2, 1e5, '3dnw-2x6', 'krylov-no-woodbury');
 save('checkerboard-timings-3dnw.mat', 'timings');
 
 
