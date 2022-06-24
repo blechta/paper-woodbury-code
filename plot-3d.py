@@ -477,6 +477,15 @@ def extract_beta(tag):
     return f'10^{{{exponent}}}'
 
 
+def get_point_size(n):
+    if n == 2:
+        return 4
+    elif n == 3:
+        return 3
+    else:
+        return 2
+
+
 def plot_true(plotter, tag, n, fake=False):
     filename = get_filename('true', tag, n)
     dataset = get_dataset(filename)
@@ -491,7 +500,7 @@ def plot_true(plotter, tag, n, fake=False):
     slices = dataset.slice_orthogonal(z=0)
     plotter.add_mesh(slices, opacity=0.25, show_scalar_bar=False)
     electrodes = electrode_coords(n)
-    ps = {2: 4, 3: 3, 4: 2, 5: 2}[n]
+    ps = get_point_size(n)
     plotter.add_mesh(electrodes, color='black', point_size=ps)
     beta = extract_beta(tag)
     if beta is not None:
@@ -610,9 +619,9 @@ if __name__ == '__main__':
     pv.global_theme.font.color = 'black'
     pv.global_theme.font.family = 'times'
 
-    plot_columns(zip(4*['fw' ], [2, 3, 4, 5]), 'fw')
-    #plot_columns(zip(4*['nw' ], [2, 3, 4, 5]), 'nw')
-    #plot_columns(zip(4*['dir'], [2, 3, 4, 5]), 'dir')
+    plot_columns(zip(100*['fw' ], [2, 3, 4, 5, 6]), 'fw')
+    #plot_columns(zip(100*['nw' ], [2, 3, 4, 5, 6]), 'nw')
+    #plot_columns(zip(100*['dir'], [2, 3, 4, 5, 6]), 'dir')
     cols = [
         ('fw-beta30', 4),
         ('fw-beta35', 4),
