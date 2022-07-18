@@ -8,19 +8,19 @@ t = sprintf('3D \\normalfont ($N^\\mathrm{ele}=%d$, $N=%d$, $M=%d$)', Nele, N, M
 plot_performance_characteristics_compare_beta('t_normal', n);
 ylabel('$t_{\mathrm{norm}}$ [s]', 'interpreter', 'latex');
 title(t, 'interpreter', 'latex');
-saveas(gcf, 'checkerboard-3d-beta-tnormal.pdf');
+export_pdf('checkerboard-3d-beta-tnormal.pdf');
 export_tikz('checkerboard-3d-beta-tnormal.tex');
 
 plot_performance_characteristics_compare_beta('iter_normal', n);
 ylabel('$n_{\mathrm{iter}}$', 'interpreter', 'latex');
 title(t, 'interpreter', 'latex');
-saveas(gcf, 'checkerboard-3d-beta-niter.pdf');
+export_pdf('checkerboard-3d-beta-niter.pdf');
 export_tikz('checkerboard-3d-beta-niter.tex');
 
 plot_performance_characteristics_compare_beta('misfit', n);
 ylabel('misfit', 'interpreter', 'latex');
 title(t, 'interpreter', 'latex');
-saveas(gcf, 'checkerboard-3d-beta-misfit.pdf');
+export_pdf('checkerboard-3d-beta-misfit.pdf');
 export_tikz('checkerboard-3d-beta-misfit.tex');
 
 
@@ -74,7 +74,7 @@ function [data_x, data_y, iter] = extract_data(tags, y_name, n)
         catch ME
             switch ME.identifier
             case 'MATLAB:load:couldNotReadFile'
-                warning('Could not open ''%s''. Skipping...', filename);
+                %warning('Could not open ''%s''. Skipping...', filename);
                 continue
             otherwise
                 rethrow(ME)
@@ -121,6 +121,14 @@ function desc = tag_to_desc(tag)
 end
 
 
+function export_pdf(filename)
+    w = warning('off', 'MATLAB:handle_graphics:exceptions:SceneNode');
+    saveas(gcf, filename);
+    warning(w);
+    fprintf('Saved ''%s''\n', filename);
+end
+
+
 function export_tikz(filename)
     % Try exporting TikZ using matlab2tikz package or fail gracefully
 
@@ -140,8 +148,10 @@ function export_tikz(filename)
         switch ME.identifier
         case 'MATLAB:UndefinedFunction'
             warning('matlab2tikz package not installed; skipping TikZ export');
+            return
         otherwise
             rethrow(ME)
         end
     end
+    fprintf('Saved ''%s''\n', filename);
 end

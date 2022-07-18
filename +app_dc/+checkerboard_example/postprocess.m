@@ -1,41 +1,12 @@
-compose_resistivity_figures_2d();
-plot_performance_characteristics('2ddir');
-plot_performance_characteristics('2dfw');
-plot_performance_characteristics('2dnw');
-plot_performance_characteristics('3ddir');
-plot_performance_characteristics('3dfw');
-plot_performance_characteristics('3dnw');
+write_table('2ddir');
+write_table('2dfw');
+write_table('2dnw');
+write_table('3ddir');
+write_table('3dfw');
+write_table('3dnw');
 
 
-function compose_resistivity_figures_2d()
-
-    files = dir('checkerboard-resistivity-2d*.fig');
-    for i = 1:numel(files)
-        f = openfig(files(i).name, 'invisible');
-
-        fig = figure();
-        axis('equal', 'tight');
-        copyobj(allchild(f.Children(6)), gca);
-        set(gca, 'ColorScale', 'log');
-        colorbar();
-        [~, basename, ~] = fileparts(files(i).name);
-        saveas(fig, strcat(basename, '-true.pdf'));
-        close(fig);
-
-        fig = figure();
-        axis('equal', 'tight');
-        copyobj(allchild(f.Children(2)), gca);
-        set(gca, 'ColorScale', 'log');
-        colorbar();
-        [~, basename, ~] = fileparts(files(i).name);
-        saveas(fig, strcat(basename, '-inv.pdf'));
-        close(fig);
-    end
-
-end
-
-
-function plot_performance_characteristics(tag)
+function write_table(tag)
 
     matfile = load(sprintf('checkerboard-timings-%s.mat', tag));
     timings = matfile.timings;
@@ -51,13 +22,8 @@ function plot_performance_characteristics(tag)
     num_obs = vertcat(timings.num_obs);
     num_electrodes = vertcat(timings.num_electrodes);
     misfit = vertcat(timings.misfit);  %#ok<NASGU>
-    beta = vertcat(timings.beta);
+    beta = vertcat(timings.beta);  %#ok<NASGU>
     n = vertcat(timings.n);
-
-    table = [n, num_electrodes, num_dofs_inv, num_obs, ...
-             t_woodbury1, t_woodbury2, t_woodbury3, iter_normal, t_normal];
-    filename = sprintf('checkerboard-timings-%s.tex', tag);
-    write_latex(filename, table);
 
     [num_rows, num_cols] = size(t_normal);
     if size(n, 2) == 1
@@ -72,57 +38,8 @@ function plot_performance_characteristics(tag)
              flat(iter_normal), flat(t_normal)];
     filename = sprintf('checkerboard-timings-flat-%s.tex', tag);
     write_latex(filename, table);
+    fprintf('Saved ''%s''\n', filename);
 
-    assert(size(unique(beta, 'rows'), 1) == 1);
-    beta = beta(1, :);
-    labels = split(strip(sprintf('i=%d (\\beta=%f)  ', [1:numel(beta); beta])), '  ');
-
-    [slope_x_, slope_y_] = get_slope(num_obs.*num_dofs_inv, t_normal(:, end), 1);
-    figure();
-    loglog(num_obs.*num_dofs_inv, t_normal(:, :), 'x', slope_x_, slope_y_, '--');
-    xlabel('MN');
-    ylabel('time for solving normal equations [s]');
-    legend(vertcat(labels, 'C M N'), 'Location', 'northwest');
-    saveas(gcf, sprintf('checkerboard-%s-normal.pdf', tag));
-
-    [slope_x_, slope_y_] = get_slope(num_obs.*num_dofs_inv, t_woodbury1(:, end), 1);
-    figure();
-    loglog(num_obs.*num_dofs_inv, t_woodbury1(:, :), 'x', slope_x_, slope_y_, '--');
-    xlabel('MN');
-    ylabel('time for computing H for Woodbury correction [s]');
-    legend(vertcat(labels, 'C M N'), 'Location', 'northwest');
-    saveas(gcf, sprintf('checkerboard-%s-woodbury1.pdf', tag));
-
-    [slope_x_, slope_y_] = get_slope(num_obs.^2.*num_dofs_inv, t_woodbury2(:, end), 1);
-    figure();
-    loglog(num_obs.^2.*num_dofs_inv, t_woodbury2(:, :), 'x', slope_x_, slope_y_, '--');
-    xlabel('M^2 N');
-    ylabel('time for assembling capacitance matrix for Woodbury correction [s]');
-    legend(vertcat(labels, 'C M^2 N'), 'Location', 'northwest');
-    saveas(gcf, sprintf('checkerboard-%s-woodbury2.pdf', tag));
-
-    [slope_x_, slope_y_] = get_slope(num_obs, t_woodbury3(:, end), 3);
-    figure();
-    loglog(num_obs, t_woodbury3(:, :), 'x', slope_x_, slope_y_, '--');
-    xlabel('M');
-    ylabel('time for computing Cholesky factor for Woodbury correction [s]');
-    legend(vertcat(labels, 'C M^3'), 'Location', 'northwest');
-    saveas(gcf, sprintf('checkerboard-%s-woodbury3.pdf', tag));
-
-    figure();
-    semilogx(num_obs, iter_normal(:, :), 'x');
-    xlabel('M');
-    ylabel('number MINRES iterations');
-    legend(labels, 'Location', 'northwest');
-    saveas(gcf, sprintf('checkerboard-%s-minres.pdf', tag));
-
-end
-
-
-function [x_, y_] = get_slope(x, y, k)
-    x_ = [min(x(:)), max(x(:))];
-    y_ = x_.^k;
-    y_ = y_ * max(y(:))/max(y_(:));
 end
 
 

@@ -1,16 +1,16 @@
-%compose_resistivity_figure_2d('dir', [4, 8, 16, 32, 64, 128, 256]);
-%compose_resistivity_figure_2d('fw',  [4, 8, 16, 32, 64, 128, 256]);
-%compose_resistivity_figure_2d('nw',  [4, 8, 16, 32, 64]);
-compose_resistivity_figure_2d('dir', [4, 8, 16, 32]);
-compose_resistivity_figure_2d('fw',  [4, 8, 16, 32, 64]);
-compose_resistivity_figure_2d('nw',  [4, 8]);
+compose_resistivity_figure_2d('dir');
+compose_resistivity_figure_2d('fw');
+compose_resistivity_figure_2d('nw');
 
 
-function compose_resistivity_figure_2d(tag, ns)
+function compose_resistivity_figure_2d(tag)
 
     tag = sprintf('checkerboard-resistivity-2d%s', tag);
     infile = sprintf('%s-n%%04d.fig', tag);
     outfile = sprintf('%s.pdf', tag);
+
+    %ns = [4, 8, 16, 32, 64, 128, 256, 1024];  % full set of experiments
+    ns = [4, 8, 16, 32, 64];  % visualization-worthy subset
 
     % Positioning and sizing parameters
     aspect_ratio = numel(ns)/2 * 0.5;
@@ -38,7 +38,16 @@ function compose_resistivity_figure_2d(tag, ns)
     cm_inv = parula();
 
     for row = 1:numel(ns)
-        f = openfig(sprintf(infile, ns(row)), 'invisible');
+        try
+            f = openfig(sprintf(infile, ns(row)), 'invisible');
+        catch ME
+            switch ME.identifier
+            case 'MATLAB:load:couldNotReadFile'
+                continue
+            otherwise
+                rethrow(ME)
+            end
+        end
         figure(fig);
 
         pos = [0, 1-cbar_height-row*height+vspace/2, 0.5-hspace, height-vspace];
@@ -92,6 +101,7 @@ function compose_resistivity_figure_2d(tag, ns)
     set(fig, 'PaperSize', dpi*[paperw, paperw*aspect_ratio]);
     set(fig, 'PaperPosition', dpi*[0, 0, paperw, paperw*aspect_ratio]);
     print(fig, outfile, '-dpdf');
+    fprintf('Saved ''%s''\n', outfile);
     close(fig);
 
 end

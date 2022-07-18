@@ -1,13 +1,11 @@
 plot_performance_characteristics_compare({'2dfw', '2dnw', '2ddir'}, 0.2);
 title('2D', 'interpreter', 'latex');
-saveas(gcf, 'checkerboard-2d-normal.pdf');
+export_pdf('checkerboard-2d-normal.pdf');
 export_tikz('checkerboard-2d-normal.tex');
 
 plot_performance_characteristics_compare({'3dfw', '3dnw', '3ddir'}, 0.7);
 title('3D \normalfont ($\beta=10^5$)', 'interpreter', 'latex');
-%plot_performance_characteristics_compare({'3dfw-beta30', '3dnw-beta30'}, 0.7);
-%title('3D \normalfont ($\beta=10^3$)', 'interpreter', 'latex');
-saveas(gcf, 'checkerboard-3d-normal.pdf');
+export_pdf('checkerboard-3d-normal.pdf');
 export_tikz('checkerboard-3d-normal.tex');
 
 
@@ -91,6 +89,14 @@ function [x_, y_] = get_slope(x, y, k)
 end
 
 
+function export_pdf(filename)
+    w = warning('off', 'MATLAB:handle_graphics:exceptions:SceneNode');
+    saveas(gcf, filename);
+    warning(w);
+    fprintf('Saved ''%s''\n', filename);
+end
+
+
 function export_tikz(filename)
     % Try exporting TikZ using matlab2tikz package or fail gracefully
 
@@ -110,8 +116,10 @@ function export_tikz(filename)
         switch ME.identifier
         case 'MATLAB:UndefinedFunction'
             warning('matlab2tikz package not installed; skipping TikZ export');
+            return
         otherwise
             rethrow(ME)
         end
     end
+    fprintf('Saved ''%s''\n', filename);
 end

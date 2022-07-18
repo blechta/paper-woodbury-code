@@ -16,15 +16,16 @@
    (where this README resides).
 2. Run
    ```
-   app_dc.checkerboard_example.full_benchmark;
+   app_dc.checkerboard_example.short_benchmark;
    ```
    This step produces some `checkerboard-*.{fig,xdmf,bin,mat}`
    files in the current directory.
 
-   This step can take around 90 minutes and needs 7 GB of RAM.
-   To get the full results of the paper, uncomment all lines
-   in `+app_dc/+checkerboard_example/full_benchmark.m`. This
-   can take around 24 hours (depending on machine) and needs
+   This step can take around 900 minutes and needs 15 GB of RAM.
+
+   To get the full results of the paper, use
+   `+app_dc/+checkerboard_example/full_benchmark.m` instead.
+   This can take around 75 hours (depending on machine) and needs
    around 250 GB of RAM.
 3. Run
    ```

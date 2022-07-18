@@ -60,8 +60,16 @@ end
 set(gcf(), 'PaperOrientation', 'landscape');
 set(gcf(), 'PaperUnits', 'normalized');
 set(gcf(), 'PaperPosition', [0 0 1 1]);
-saveas(gcf(), 'checkerboard-survey.pdf');
+export_pdf('checkerboard-survey.pdf');
 export_tikz('checkerboard-survey.tex');
+
+
+function export_pdf(filename)
+    w = warning('off', 'MATLAB:handle_graphics:exceptions:SceneNode');
+    saveas(gcf, filename);
+    warning(w);
+    fprintf('Saved ''%s''\n', filename);
+end
 
 
 function export_tikz(filename)
@@ -73,8 +81,10 @@ function export_tikz(filename)
         switch ME.identifier
         case 'MATLAB:UndefinedFunction'
             warning('matlab2tikz package not installed; skipping TikZ export');
+            return
         otherwise
             rethrow(ME)
         end
     end
+    fprintf('Saved ''%s''\n', filename);
 end

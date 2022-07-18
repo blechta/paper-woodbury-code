@@ -401,6 +401,10 @@ def get_dataset(filename):
     try:
         dataset = _datasets[filename]
     except KeyError:
+        if not os.path.isfile(filename):
+            print(f"File '{filename}' missing")
+            _datasets[filename] = dataset = None
+            return dataset
         print(f"Opening '{filename}'...")
         try:
             dataset = read_file(filename)
@@ -526,7 +530,12 @@ def plot_inv(plotter, tag, n, z):
 
 def add_cbar(plotter, position_y, height):
     plotter.subplot(0, 0)
-    cbar = plotter.add_scalar_bar(above_label='7000',
+    try:
+        mapper = plotter.mapper
+    except AttributeError:
+        return
+    cbar = plotter.add_scalar_bar(mapper=mapper,
+                                  above_label='7000',
                                   position_x=0.1, position_y=position_y,
                                   width=0.8, height=height,
                                   fmt="%.0f", label_font_size=24,
@@ -550,11 +559,6 @@ def plot_columns(cols, output_tag, num_slices=8):
                    row_weights=row_weights,
                    groups=[(0, np.s_[:])],
                    border=False)
-
-    # HACK: Make a fake plot in subplot allocated for colorbar
-    p.subplot(0, 0)
-    tag, n = cols[0]
-    plot_true(p, tag, n, fake=True)
 
     for i, (tag, n) in enumerate(cols):
 
