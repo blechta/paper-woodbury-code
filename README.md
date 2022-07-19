@@ -22,13 +22,14 @@
    ```
    This step produces some `checkerboard-*.{fig,xdmf,bin,mat}`
    files in the current directory.
-
    This step can take around 900 minutes and needs 15 GB of RAM.
 
    To get the full results of the paper, use
-   `+app_dc/+checkerboard_example/full_benchmark.m` instead.
-   This can take around 75 hours (depending on machine) and needs
-   around 250 GB of RAM.
+   ```
+   app_dc.checkerboard_example.full_benchmark;
+   ```
+   instead. This can take around 75 hours (depending on machine)
+   and needs around 250 GB of RAM.
 3. Run
    ```
    app_dc.checkerboard_example.postprocess;
@@ -53,7 +54,8 @@ by using Docker.
 docker build -t pyvista dockerfiles/
 docker run --rm -v "$PWD":/tmp pyvista python3 -u plot-3d.py
 ```
-This produces `checkerboard-3dfw.svg`.
+This produces `checkerboard-3dfw.svg` and
+`checkerboard-3dfw-beta.svg`.
 
 
 ## Authors ##
