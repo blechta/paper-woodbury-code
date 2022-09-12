@@ -1,7 +1,7 @@
-# Supporting code for paper #
-# EFFICIENT SOLUTION OF PARAMETER IDENTIFICATION PROBLEMS WITH $H^1$-REGULARIZATION #
+# Supporting code for paper Efficient solution of parameter identification problems with $H^1$ regularization #
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6521320.svg)](https://doi.org/10.5281/zenodo.6521320)
+[![DOI](https://zenodo.org/badge/DOI/10.48550/arXiv.2209.02815.svg)](https://doi.org/10.48550/arXiv.2209.02815)
 
 
 ## Requirements ##
